@@ -1,0 +1,17 @@
+version: '2'
+services:
+    smartinvestplus-app:
+        image: smartinvestplus
+        external_links:
+            - smartinvestplus-mongodb:mongodb
+        environment:
+            - SPRING_PROFILES_ACTIVE=prod
+            - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017
+            - SPRING_DATA_MONGODB_DATABASE=smartinvestplus
+            - JHIPSTER_SLEEP=10 # gives time for the database to boot before the application
+        ports:
+            - 8080:8080
+    smartinvestplus-mongodb:
+        extends:
+            file: mongodb.yml
+            service: smartinvestplus-mongodb
