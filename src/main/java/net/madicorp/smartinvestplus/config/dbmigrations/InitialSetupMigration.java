@@ -1,5 +1,7 @@
 package net.madicorp.smartinvestplus.config.dbmigrations;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.databind.introspect.VisibilityChecker;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.github.mongobee.changeset.ChangeLog;
 import com.github.mongobee.changeset.ChangeSet;
@@ -9,9 +11,9 @@ import net.madicorp.smartinvestplus.domain.Authority;
 import net.madicorp.smartinvestplus.domain.User;
 import net.madicorp.smartinvestplus.service.mustache.ListStringMustacheTemplate;
 import net.madicorp.smartinvestplus.service.mustache.MustacheService;
-import net.madicorp.smartinvestplus.stockexchange.ClosingPrice;
-import net.madicorp.smartinvestplus.stockexchange.StockExchange;
-import net.madicorp.smartinvestplus.stockexchange.Title;
+import net.madicorp.smartinvestplus.stockexchange.CloseRate;
+import net.madicorp.smartinvestplus.stockexchange.Security;
+import net.madicorp.smartinvestplus.stockexchange.StockExchangeWithSecurities;
 import org.jongo.Jongo;
 import org.jongo.Mapper;
 import org.jongo.MongoCollection;
@@ -67,7 +69,7 @@ public class InitialSetupMigration {
     public void addStockExchangesAndTitles(DB db) {
         MongoCollection stockExchanges = collection(db, "stock_exchange");
         stockExchanges.ensureIndex(mongoIndex("_id", "titles"));
-        StockExchange brvm = new StockExchange();
+        StockExchangeWithSecurities brvm = new StockExchangeWithSecurities();
         brvm.setName("Bourse régionale des valeurs Mobilières");
         brvm.setSymbol("BRVM");
 
@@ -77,7 +79,7 @@ public class InitialSetupMigration {
                   // Skip header
                   .skip(1)
                   .map(this::parseTitle)
-                  .forEach((title) -> brvm.getTitles().add(title));
+                  .forEach((title) -> brvm.getSecurities().add(title));
         } catch (IOException e) {
             throw new MigrationException("Unexpected exception reading file", e);
         }
@@ -106,40 +108,42 @@ public class InitialSetupMigration {
             collection(db, closePricesResourceFileName.replace(".csv", "") + "_closing_prices");
         closingPricesCollection.ensureIndex(mongoIndex("date"));
         try (BufferedReader reader = new BufferedReader(new FileReader(closePricesResource.getFile()))) {
-            ClosingPrice[] closingPrices = reader.lines()
-                                                 // Skip header
-                                                 .skip(1)
-                                                 .map(this::parseClosingPrice)
-                                                 .toArray(ClosingPrice[]::new);
-            closingPricesCollection.insert(closingPrices);
+            CloseRate[] closeRates = reader.lines()
+                                           // Skip header
+                                           .skip(1)
+                                           .map(this::parseClosingPrice)
+                                           .toArray(CloseRate[]::new);
+            closingPricesCollection.insert(closeRates);
         } catch (IOException e) {
             throw new MigrationException("Unexpected exception reading file", e);
         }
     }
 
-    private ClosingPrice parseClosingPrice(String line) {
+    private CloseRate parseClosingPrice(String line) {
         String[] data = line.split(";");
         LocalDate date = LocalDate.parse(data[0], DateTimeFormatter.ofPattern("uuuu/MM/dd"));
         Double rate = new Double(data[1]);
-        ClosingPrice closingPrice = new ClosingPrice();
-        closingPrice.setDate(date);
-        closingPrice.setRate(rate);
-        return closingPrice;
+        CloseRate closeRate = new CloseRate();
+        closeRate.setDate(date);
+        closeRate.setRate(rate);
+        return closeRate;
     }
 
-    private Title parseTitle(String line) {
+    private Security parseTitle(String line) {
         String[] data = line.split(";");
-        Title title = new Title();
-        title.setName(data[0]);
-        title.setSymbol(data[1]);
-        return title;
+        Security security = new Security();
+        security.setName(data[0]);
+        security.setSymbol(data[1]);
+        return security;
     }
 
     private static MongoCollection collection(DB db, String name) {
-        Mapper mapper = new JacksonMapper.Builder()
-            .registerModule(new BsonModule())
-            .registerModule(new JavaTimeModule())
-            .build();
+        Mapper mapper = new JacksonMapper.Builder().registerModule(new BsonModule())
+                                                   .registerModule(new JavaTimeModule())
+                                                   .setVisibilityChecker(new VisibilityChecker.Std(
+                                                       JsonAutoDetect.Visibility.PUBLIC_ONLY).withFieldVisibility(
+                                                       JsonAutoDetect.Visibility.NONE))
+                                                   .build();
         Jongo jongo = new Jongo(db, mapper);
         return jongo.getCollection(name);
     }

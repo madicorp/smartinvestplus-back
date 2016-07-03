@@ -1,12 +1,15 @@
 package net.madicorp.smartinvestplus.config;
 
-import net.madicorp.smartinvestplus.domain.util.*;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsonorg.JsonOrgModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import java.time.*;
-import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
+import net.madicorp.smartinvestplus.domain.util.JSR310DateTimeSerializer;
+import net.madicorp.smartinvestplus.domain.util.JSR310LocalDateDeserializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
+
+import java.time.*;
 
 @Configuration
 public class JacksonConfiguration {
@@ -19,9 +22,8 @@ public class JacksonConfiguration {
         module.addSerializer(LocalDateTime.class, JSR310DateTimeSerializer.INSTANCE);
         module.addSerializer(Instant.class, JSR310DateTimeSerializer.INSTANCE);
         module.addDeserializer(LocalDate.class, JSR310LocalDateDeserializer.INSTANCE);
-        return new Jackson2ObjectMapperBuilder()
-                .featuresToDisable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-                .findModulesViaServiceLoader(true)
-                .modulesToInstall(module);
+        return new Jackson2ObjectMapperBuilder().featuresToDisable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+                                                .findModulesViaServiceLoader(true)
+                                                .modulesToInstall(module, new JsonOrgModule());
     }
 }

@@ -1,13 +1,15 @@
 package net.madicorp.smartinvestplus.config.dbmigrations;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.databind.introspect.VisibilityChecker;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.lordofthejars.nosqlunit.mongodb.InMemoryMongoDb;
 import com.lordofthejars.nosqlunit.mongodb.MongoDbRule;
 import com.mongodb.DB;
 import de.undercouch.bson4jackson.BsonModule;
-import net.madicorp.smartinvestplus.stockexchange.ClosingPrice;
 import net.madicorp.smartinvestplus.domain.Authority;
-import net.madicorp.smartinvestplus.stockexchange.StockExchange;
+import net.madicorp.smartinvestplus.stockexchange.CloseRate;
+import net.madicorp.smartinvestplus.stockexchange.StockExchangeWithSecurities;
 import org.assertj.core.api.Assertions;
 import org.jongo.Jongo;
 import org.jongo.Mapper;
@@ -83,9 +85,10 @@ public class InitialSetupMigrationTest {
         // THEN
         Jongo jongo = jongo();
         MongoCollection stockExchanges = jongo.getCollection("stock_exchange");
-        StockExchange brvm = stockExchanges.find().as(StockExchange.class).next();
+        StockExchangeWithSecurities brvm = stockExchanges.find().as(StockExchangeWithSecurities.class).next();
+        Assertions.assertThat(brvm.getSymbol()).isEqualTo("BRVM");
         Assertions.assertThat(brvm.getName()).isEqualTo("Bourse régionale des valeurs Mobilières");
-        Assertions.assertThat(brvm.getTitles())
+        Assertions.assertThat(brvm.getSecurities())
                   .extracting("symbol")
                   .contains("ABJC", "BICC", "BNBC");
     }
@@ -102,24 +105,25 @@ public class InitialSetupMigrationTest {
         MongoCollection airLiquideCiClosingPrices = jongo.getCollection("BRVM_SIVC_closing_prices");
         LocalDate firstAirLiquideDate = airLiquideCiClosingPrices.find()
                                                                  .limit(1)
-                                                                 .as(ClosingPrice.class)
+                                                                 .as(CloseRate.class)
                                                                  .next()
                                                                  .getDate();
         Assertions.assertThat(firstAirLiquideDate).isEqualTo("2016-03-18");
         LocalDate lastAirLiguideDate = airLiquideCiClosingPrices.find()
                                                                 .sort("{_id:-1}")
                                                                 .limit(1)
-                                                                .as(ClosingPrice.class)
+                                                                .as(CloseRate.class)
                                                                 .next()
                                                                 .getDate();
         Assertions.assertThat(lastAirLiguideDate).isEqualTo("2008-08-01");
     }
 
     private Jongo jongo() {
-
         Mapper mapper = new JacksonMapper.Builder()
             .registerModule(new BsonModule())
             .registerModule(new JavaTimeModule())
+            .setVisibilityChecker(new VisibilityChecker.Std(
+                JsonAutoDetect.Visibility.PUBLIC_ONLY).withFieldVisibility(JsonAutoDetect.Visibility.NONE))
             .build();
         return new Jongo(db, mapper);
     }
