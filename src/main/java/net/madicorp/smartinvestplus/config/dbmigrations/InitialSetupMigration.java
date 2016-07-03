@@ -1,106 +1,180 @@
 package net.madicorp.smartinvestplus.config.dbmigrations;
 
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.github.mongobee.changeset.ChangeLog;
 import com.github.mongobee.changeset.ChangeSet;
-import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DB;
-import com.mongodb.DBCollection;
+import de.undercouch.bson4jackson.BsonModule;
+import net.madicorp.smartinvestplus.domain.Authority;
+import net.madicorp.smartinvestplus.domain.User;
+import net.madicorp.smartinvestplus.service.mustache.ListStringMustacheTemplate;
+import net.madicorp.smartinvestplus.service.mustache.MustacheService;
+import net.madicorp.smartinvestplus.stockexchange.ClosingPrice;
+import net.madicorp.smartinvestplus.stockexchange.StockExchange;
+import net.madicorp.smartinvestplus.stockexchange.Title;
 import org.jongo.Jongo;
+import org.jongo.Mapper;
+import org.jongo.MongoCollection;
+import org.jongo.marshall.jackson.JacksonMapper;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 
 /**
  * Creates the initial database setup
  */
 @ChangeLog(order = "001")
 public class InitialSetupMigration {
-    private Map<String, String>[] authoritiesUser = new Map[]{new HashMap<>()};
+    private static final Authority ROLE_ADMIN = new Authority("ROLE_ADMIN");
+    private static final Authority ROLE_USER = new Authority("ROLE_USER");
 
-    private Map<String, String>[] authoritiesAdminAndUser = new Map[]{new HashMap<>(), new HashMap<>()};
-
-    {
-        authoritiesUser[0].put("_id", "ROLE_USER");
-        authoritiesAdminAndUser[0].put("_id", "ROLE_USER");
-        authoritiesAdminAndUser[1].put("_id", "ROLE_ADMIN");
-    }
+    private final MustacheService mustacheService = new MustacheService();
 
     @ChangeSet(order = "01", author = "initiator", id = "01-addAuthorities")
     public void addAuthorities(DB db) {
-        DBCollection authorityCollection = db.getCollection("jhi_authority");
-        authorityCollection.insert(
-            BasicDBObjectBuilder.start()
-                .add("_id", "ROLE_ADMIN")
-                .get());
-        authorityCollection.insert(
-            BasicDBObjectBuilder.start()
-                .add("_id", "ROLE_USER")
-                .get());
+        MongoCollection authorities = collection(db, "sip_authority");
+        authorities.insert(ROLE_ADMIN);
+        authorities.insert(ROLE_USER);
     }
 
     @ChangeSet(order = "02", author = "initiator", id = "02-addUsers")
     public void addUsers(DB db) {
-        Jongo jongo = new Jongo(db);
-        jongo.getCollection("jhi_user").ensureIndex("");
-        DBCollection usersCollection = db.getCollection("jhi_user");
-        usersCollection.createIndex("login");
-        usersCollection.createIndex("email");
-        usersCollection.insert(BasicDBObjectBuilder.start()
-            .add("_id", "user-0")
-            .add("login", "system")
-            .add("password", "$2a$10$mE.qmcV0mFU5NcKh73TZx.z4ueI/.bDWbj0T1BYyqP481kGGarKLG")
-            .add("first_name", "")
-            .add("last_name", "System")
-            .add("email", "system@localhost")
-            .add("activated", "true")
-            .add("lang_key", "en")
-            .add("created_by", "system")
-            .add("created_date", new Date())
-            .add("authorities", authoritiesAdminAndUser)
-            .get()
-        );
-        usersCollection.insert(BasicDBObjectBuilder.start()
-            .add("_id", "user-1")
-            .add("login", "anonymousUser")
-            .add("password", "$2a$10$j8S5d7Sr7.8VTOYNviDPOeWX8KcYILUVJBsYV83Y5NtECayypx9lO")
-            .add("first_name", "Anonymous")
-            .add("last_name", "User")
-            .add("email", "anonymous@localhost")
-            .add("activated", "true")
-            .add("lang_key", "en")
-            .add("created_by", "system")
-            .add("created_date", new Date())
-            .add("authorities", new Map[]{})
-            .get()
-        );
-        usersCollection.insert(BasicDBObjectBuilder.start()
-            .add("_id", "user-2")
-            .add("login", "admin")
-            .add("password", "$2a$10$gSAhZrxMllrbgj/kkK9UceBPpChGWJA7SYIb1Mqo.n5aNLq1/oRrC")
-            .add("first_name", "admin")
-            .add("last_name", "Administrator")
-            .add("email", "admin@localhost")
-            .add("activated", "true")
-            .add("lang_key", "en")
-            .add("created_by", "system")
-            .add("created_date", new Date())
-            .add("authorities", authoritiesAdminAndUser)
-            .get()
-        );
-        usersCollection.insert(BasicDBObjectBuilder.start()
-            .add("_id", "user-3")
-            .add("login", "user")
-            .add("password", "$2a$10$VEjxo0jq2YG9Rbk2HmX9S.k1uZBGYUHdUcid3g/vfiEl7lwWgOH/K")
-            .add("first_name", "")
-            .add("last_name", "User")
-            .add("email", "user@localhost")
-            .add("activated", "true")
-            .add("lang_key", "en")
-            .add("created_by", "system")
-            .add("created_date", new Date())
-            .add("authorities", authoritiesUser)
-            .get()
-        );
+        MongoCollection users = collection(db, "sip_user");
+        users.ensureIndex(mongoIndex("login"));
+        users.ensureIndex(mongoIndex("email"));
+        users.insert(user("user-0", "system", "$2a$10$mE.qmcV0mFU5NcKh73TZx.z4ueI/.bDWbj0T1BYyqP481kGGarKLG", "",
+                          "System", "system@localhost", true, "en", "system", ROLE_ADMIN, ROLE_USER));
+        users.insert(user("user-1", "anonymousUser", "$2a$10$j8S5d7Sr7.8VTOYNviDPOeWX8KcYILUVJBsYV83Y5NtECayypx9lO",
+                          "Anonymous", "User", "anonymous@localhost", true, "en", "system"));
+        users.insert(user("user-2", "admin", "$2a$10$gSAhZrxMllrbgj/kkK9UceBPpChGWJA7SYIb1Mqo.n5aNLq1/oRrC", "admin",
+                          "Administrator", "admin@localhost", true, "en", "system", ROLE_ADMIN, ROLE_USER));
+        users.insert(user("user-3", "user", "$2a$10$VEjxo0jq2YG9Rbk2HmX9S.k1uZBGYUHdUcid3g/vfiEl7lwWgOH/K", "", "User",
+                          "user@localhost", true, "en", "system", ROLE_USER));
+    }
+
+    @ChangeSet(order = "03", author = "initiator", id = "03-addStockExchanges")
+    public void addStockExchangesAndTitles(DB db) {
+        MongoCollection stockExchanges = collection(db, "stock_exchange");
+        stockExchanges.ensureIndex(mongoIndex("_id", "titles"));
+        StockExchange brvm = new StockExchange();
+        brvm.setName("Bourse régionale des valeurs Mobilières");
+        brvm.setSymbol("BRVM");
+
+        ClassPathResource titlesResource = new ClassPathResource("config/mongobee/changeset-1/titles.csv");
+        try (BufferedReader reader = new BufferedReader(new FileReader(titlesResource.getFile()))) {
+            reader.lines()
+                  // Skip header
+                  .skip(1)
+                  .map(this::parseTitle)
+                  .forEach((title) -> brvm.getTitles().add(title));
+        } catch (IOException e) {
+            throw new MigrationException("Unexpected exception reading file", e);
+        }
+
+        stockExchanges.insert(brvm);
+    }
+
+    @ChangeSet(order = "04", author = "initiator", id = "04-addClosingPrices")
+    public void addClosingPrices(DB db) {
+        PathMatchingResourcePatternResolver resourcePatternResolver = new PathMatchingResourcePatternResolver();
+        Resource[] closePricesResources;
+        try {
+            closePricesResources =
+                resourcePatternResolver.getResources("config/mongobee/changeset-1/close/*.csv");
+        } catch (IOException e) {
+            throw new MigrationException("Unexpected exception reading file", e);
+        }
+        for (Resource closePricesResource : closePricesResources) {
+            insertClosingPrices(db, closePricesResource);
+        }
+    }
+
+    private void insertClosingPrices(DB db, Resource closePricesResource) {
+        String closePricesResourceFileName = closePricesResource.getFilename();
+        MongoCollection closingPricesCollection =
+            collection(db, closePricesResourceFileName.replace(".csv", "") + "_closing_prices");
+        closingPricesCollection.ensureIndex(mongoIndex("date"));
+        try (BufferedReader reader = new BufferedReader(new FileReader(closePricesResource.getFile()))) {
+            ClosingPrice[] closingPrices = reader.lines()
+                                                 // Skip header
+                                                 .skip(1)
+                                                 .map(this::parseClosingPrice)
+                                                 .toArray(ClosingPrice[]::new);
+            closingPricesCollection.insert(closingPrices);
+        } catch (IOException e) {
+            throw new MigrationException("Unexpected exception reading file", e);
+        }
+    }
+
+    private ClosingPrice parseClosingPrice(String line) {
+        String[] data = line.split(";");
+        LocalDate date = LocalDate.parse(data[0], DateTimeFormatter.ofPattern("uuuu/MM/dd"));
+        Double rate = new Double(data[1]);
+        ClosingPrice closingPrice = new ClosingPrice();
+        closingPrice.setDate(date);
+        closingPrice.setRate(rate);
+        return closingPrice;
+    }
+
+    private Title parseTitle(String line) {
+        String[] data = line.split(";");
+        Title title = new Title();
+        title.setName(data[0]);
+        title.setSymbol(data[1]);
+        return title;
+    }
+
+    private static MongoCollection collection(DB db, String name) {
+        Mapper mapper = new JacksonMapper.Builder()
+            .registerModule(new BsonModule())
+            .registerModule(new JavaTimeModule())
+            .build();
+        Jongo jongo = new Jongo(db, mapper);
+        return jongo.getCollection(name);
+    }
+
+    private String mongoIndex(String field, String... fields) {
+        ListStringMustacheTemplate<String> indices;
+        try {
+            indices = mustacheService.compileList("mongo_indices");
+        } catch (IOException e) {
+            throw new MigrationException("Unable to find mongo_indices template", e);
+        }
+        ArrayList<String> indexFields = new ArrayList<>();
+        indexFields.add(field);
+        Collections.addAll(indexFields, fields);
+        return indices.render(indexFields);
+    }
+
+    private static User user(String id, String login, String password, String firstName, String lastName,
+                             String email, boolean activated, String langKey, String creator,
+                             Authority... authorities) {
+        User user = new User();
+        user.setId(id);
+        user.setLogin(login);
+        user.setPassword(password);
+        user.setFirstName(firstName);
+        user.setLastName(lastName);
+        user.setEmail(email);
+        user.setActivated(activated);
+        user.setLangKey(langKey);
+        user.setCreatedBy(creator);
+        user.setCreatedBy(creator);
+        user.setCreatedDate(ZonedDateTime.now());
+        if (authorities != null && authorities.length > 0) {
+            user.setAuthorities(new HashSet<>(Arrays.asList(authorities)));
+        }
+        return user;
     }
 }

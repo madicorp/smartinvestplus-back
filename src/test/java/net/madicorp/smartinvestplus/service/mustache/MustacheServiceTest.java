@@ -18,22 +18,6 @@ import java.util.List;
 public class MustacheServiceTest {
     private MustacheService subject = new MustacheService();
 
-    @Before
-    public void injectBaseDir() throws Exception {
-        String testPath = MustacheServiceTest.class.getClassLoader().getResource(".").getFile();
-        String baseDir = Paths.get(testPath).getParent().getParent().toString();
-        Field baseDirField = MustacheService.class.getDeclaredField("baseDir");
-        baseDirField.setAccessible(true);
-        baseDirField.set(subject, baseDir);
-    }
-
-    @Before
-    public void injectMustacheFactory() throws Exception {
-        Field mustacheFactoryField = MustacheService.class.getDeclaredField("mustacheFactory");
-        mustacheFactoryField.setAccessible(true);
-        mustacheFactoryField.set(subject, new DefaultMustacheFactory());
-    }
-
     @Test
     public void should_return_mongo_indices() throws Exception {
         // GIVEN

@@ -16,10 +16,10 @@ import java.util.stream.Stream;
  * Time: 00:19
  */
 @RequiredArgsConstructor
-class ListStringMustacheTemplate<T> {
+public class ListStringMustacheTemplate<T> {
     private final Mustache mustache;
 
-    String render(List<T> entities) {
+    public String render(List<T> entities) {
         StringWriter resultWriter = new StringWriter();
         int size = entities.size();
         List<SeparatedEntity<T>> separatedEntities = IntStream.range(0, size)

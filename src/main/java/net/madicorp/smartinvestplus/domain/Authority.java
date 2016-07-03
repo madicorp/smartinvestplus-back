@@ -1,6 +1,8 @@
 package net.madicorp.smartinvestplus.domain;
 
 
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import javax.validation.constraints.NotNull;
@@ -10,7 +12,9 @@ import java.io.Serializable;
 /**
  * An authority (a security role) used by Spring Security.
  */
-@Document(collection = "jhi_authority")
+@Document(collection = "sip_authority")
+@AllArgsConstructor
+@NoArgsConstructor
 public class Authority implements Serializable {
 
     private static final long serialVersionUID = 1L;
