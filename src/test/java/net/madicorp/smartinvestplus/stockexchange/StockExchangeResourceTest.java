@@ -42,13 +42,12 @@ public class StockExchangeResourceTest extends JerseyTest {
     }
 
     @Test
-    public void should_return_stock_exchange_and_security_links() throws Exception {
+    public void should_return_stock_exchanges_and_related_security_links() throws Exception {
         // GIVEN
         when(mockRepo.findAll()).thenReturn(Collections.singletonList(stockExchange()));
 
         // WHEN
-        Response stockExchangesResp = target("/api/stock-exchanges/").request()
-                                                                     .get();
+        Response stockExchangesResp = target("/api/stock-exchanges/").request().get();
 
         // THEN
         Assertions.assertThat(stockExchangesResp.getStatus()).isEqualTo(200);
@@ -57,6 +56,37 @@ public class StockExchangeResourceTest extends JerseyTest {
                          .hasSize("$", 1)
                          .contains("$[0].symbol", "BRVM")
                          .contains("$[0].links[0]", "/api/stock-exchanges/BRVM/securities/sec_1");
+    }
+
+    @Test
+    public void should_return_stock_exchange_and_related_security_links() throws Exception {
+        // GIVEN
+        when(mockRepo.findOne("BRVM")).thenReturn(stockExchange());
+
+        // WHEN
+        Response stockExchangeResp = target("/api/stock-exchanges/BRVM").request().get();
+
+        // THEN
+        Assertions.assertThat(stockExchangeResp.getStatus()).isEqualTo(200);
+        String json = stockExchangeResp.readEntity(String.class);
+        JsonPathAssertion.assertThat(json)
+                         .hasSize("$.links", 2)
+                         .contains("$.symbol", "BRVM")
+                         .contains("$.links[0]", "/api/stock-exchanges/BRVM/securities/sec_1");
+    }
+
+    @Test
+    public void should_return_404_if_stock_exchange_not_found() throws Exception {
+        // GIVEN
+        when(mockRepo.findOne("BRVM")).thenReturn(null);
+
+        // WHEN
+        Response stockExchangeResp = target("/api/stock-exchanges/BRVM").request().get();
+
+        // THEN
+        Assertions.assertThat(stockExchangeResp.getStatus()).isEqualTo(404);
+        Assertions.assertThat(stockExchangeResp.readEntity(String.class))
+                  .isEqualTo("Stock exchange 'BRVM' has not been found");
     }
 
     private StockExchangeWithSecurities stockExchange() {

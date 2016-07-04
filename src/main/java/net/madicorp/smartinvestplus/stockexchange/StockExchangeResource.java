@@ -11,15 +11,15 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 import javax.xml.ws.http.HTTPException;
 import java.net.URI;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -69,19 +69,35 @@ public class StockExchangeResource {
     public JSONArray getStockExchanges() {
         log.debug("REST request to get stock exchanges");
         List<StockExchangeWithSecurities> stockExchanges = repository.findAll();
+        UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder();
         return stockExchanges.stream()
-                             .map(this::buildStockExchangeJSON)
+                             .map(stockExchange ->
+                                      this.buildStockExchangeJSON(stockExchange,
+                                                                  () -> uriBuilder.path(stockExchange.getSymbol())))
                              .collect(JSONArray::new,
                                       JSONArray::put,
                                       JSONArray::put);
     }
 
-    private JSONObject buildStockExchangeJSON(StockExchangeWithSecurities stockExchangeWithSecurities) {
+    @Path("/stock-exchanges/{symbol}")
+    @GET
+    @Produces(MediaType.APPLICATION_JSON_VALUE)
+    @Secured(AuthoritiesConstants.ANONYMOUS)
+    public JSONObject getStockExchange(@PathParam("symbol") String symbol) {
+        log.debug("REST request to get stock exchange: {}", symbol);
+        StockExchangeWithSecurities stockExchange = repository.findOne(symbol);
+        if(stockExchange == null) {
+            String notFoundMessage = String.format("Stock exchange '%s' has not been found", symbol);
+            Response notFoundResponse = Response.status(Response.Status.NOT_FOUND).entity(notFoundMessage).build();
+            throw new NotFoundException(notFoundResponse);
+        }
+        return this.buildStockExchangeJSON(stockExchange, () -> uriInfo.getAbsolutePathBuilder());
+    }
+
+    private JSONObject buildStockExchangeJSON(StockExchangeWithSecurities stockExchangeWithSecurities,
+                                              Supplier<UriBuilder> uriBuilderSupplier) {
         JSONObject stockExchangeJSON = new JSONObject(stockExchangeWithSecurities.getStockExchange());
-        UriBuilder securityURIBuilder = uriInfo.getAbsolutePathBuilder()
-                                               .path(stockExchangeWithSecurities.getSymbol())
-                                               .path("securities")
-                                               .path("{arg1}");
+        UriBuilder securityURIBuilder = uriBuilderSupplier.get().path("securities").path("{arg1}");
         List<String> links = stockExchangeWithSecurities.getSecurities()
                                                         .stream()
                                                         .map(security -> securityURIBuilder.build(security.getSymbol()))
