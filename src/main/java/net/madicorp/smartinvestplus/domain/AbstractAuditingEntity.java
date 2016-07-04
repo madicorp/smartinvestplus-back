@@ -1,13 +1,13 @@
 package net.madicorp.smartinvestplus.domain;
 
-import java.io.Serializable;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.springframework.cloud.cloudfoundry.com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.mongodb.core.mapping.Field;
+
+import java.io.Serializable;
 import java.time.ZonedDateTime;
 
 
@@ -20,22 +20,22 @@ public abstract class AbstractAuditingEntity implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @CreatedBy
-    @Field("created_by")
+    @JsonProperty("created_by")
     @JsonIgnore
     private String createdBy;
 
     @CreatedDate
-    @Field("created_date")
+    @JsonProperty("created_date")
     @JsonIgnore
     private ZonedDateTime createdDate = ZonedDateTime.now();
 
     @LastModifiedBy
-    @Field("last_modified_by")
+    @JsonProperty("last_modified_by")
     @JsonIgnore
     private String lastModifiedBy;
 
     @LastModifiedDate
-    @Field("last_modified_date  ")
+    @JsonProperty("last_modified_date  ")
     @JsonIgnore
     private ZonedDateTime lastModifiedDate = ZonedDateTime.now();
 

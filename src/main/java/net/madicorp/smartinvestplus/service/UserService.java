@@ -14,11 +14,12 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-
-import java.time.LocalDate;
-import java.time.ZonedDateTime;
 import javax.inject.Inject;
-import java.util.*;
+import java.time.ZonedDateTime;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 /**
  * Service class for managing users.
@@ -27,7 +28,6 @@ import java.util.*;
 public class UserService {
 
     private final Logger log = LoggerFactory.getLogger(UserService.class);
-
 
     @Inject
     private PasswordEncoder passwordEncoder;
@@ -41,46 +41,46 @@ public class UserService {
     public Optional<User> activateRegistration(String key) {
         log.debug("Activating user for activation key {}", key);
         return userRepository.findOneByActivationKey(key)
-            .map(user -> {
-                // activate given user for the registration key.
-                user.setActivated(true);
-                user.setActivationKey(null);
-                userRepository.save(user);
-                log.debug("Activated user: {}", user);
-                return user;
-            });
+                             .map(user -> {
+                                 // activate given user for the registration key.
+                                 user.setActivated(true);
+                                 user.setActivationKey(null);
+                                 userRepository.save(user);
+                                 log.debug("Activated user: {}", user);
+                                 return user;
+                             });
     }
 
     public Optional<User> completePasswordReset(String newPassword, String key) {
-       log.debug("Reset user password for reset key {}", key);
+        log.debug("Reset user password for reset key {}", key);
 
-       return userRepository.findOneByResetKey(key)
-            .filter(user -> {
-                ZonedDateTime oneDayAgo = ZonedDateTime.now().minusHours(24);
-                return user.getResetDate().isAfter(oneDayAgo);
-           })
-           .map(user -> {
-                user.setPassword(passwordEncoder.encode(newPassword));
-                user.setResetKey(null);
-                user.setResetDate(null);
-                userRepository.save(user);
-                return user;
-           });
+        return userRepository.findOneByResetKey(key)
+                             .filter(user -> {
+                                 ZonedDateTime oneDayAgo = ZonedDateTime.now().minusHours(24);
+                                 return user.getResetDate().isAfter(oneDayAgo);
+                             })
+                             .map(user -> {
+                                 user.setPassword(passwordEncoder.encode(newPassword));
+                                 user.setResetKey(null);
+                                 user.setResetDate(null);
+                                 userRepository.save(user);
+                                 return user;
+                             });
     }
 
     public Optional<User> requestPasswordReset(String mail) {
         return userRepository.findOneByEmail(mail)
-            .filter(User::getActivated)
-            .map(user -> {
-                user.setResetKey(RandomUtil.generateResetKey());
-                user.setResetDate(ZonedDateTime.now());
-                userRepository.save(user);
-                return user;
-            });
+                             .filter(User::getActivated)
+                             .map(user -> {
+                                 user.setResetKey(RandomUtil.generateResetKey());
+                                 user.setResetDate(ZonedDateTime.now());
+                                 userRepository.save(user);
+                                 return user;
+                             });
     }
 
     public User createUserInformation(String login, String password, String firstName, String lastName, String email,
-        String langKey) {
+                                      String langKey) {
 
         User newUser = new User();
         Authority authority = authorityRepository.findOne(AuthoritiesConstants.USER);

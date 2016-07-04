@@ -1,13 +1,11 @@
 package net.madicorp.smartinvestplus.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import net.madicorp.smartinvestplus.config.Constants;
 import org.hibernate.validator.constraints.Email;
+import org.springframework.cloud.cloudfoundry.com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
@@ -21,7 +19,7 @@ import java.util.Set;
 /**
  * A user.
  */
-@Document(collection = "jhi_user")
+@Document(collection = "sip_user")
 public class User extends AbstractAuditingEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -34,17 +32,16 @@ public class User extends AbstractAuditingEntity implements Serializable {
     @Size(min = 1, max = 50)
     private String login;
 
-    @JsonIgnore
     @NotNull
     @Size(min = 60, max = 60)
     private String password;
 
     @Size(max = 50)
-    @Field("first_name")
+    @JsonProperty("first_name")
     private String firstName;
 
     @Size(max = 50)
-    @Field("last_name")
+    @JsonProperty("last_name")
     private String lastName;
 
     @Email
@@ -54,19 +51,19 @@ public class User extends AbstractAuditingEntity implements Serializable {
     private boolean activated = false;
 
     @Size(min = 2, max = 5)
-    @Field("lang_key")
+    @JsonProperty("lang_key")
     private String langKey;
 
     @Size(max = 20)
-    @Field("activation_key")
+    @JsonProperty("activation_key")
     @JsonIgnore
     private String activationKey;
 
     @Size(max = 20)
-    @Field("reset_key")
+    @JsonProperty("reset_key")
     private String resetKey;
 
-    @Field("reset_date")
+    @JsonProperty("reset_date")
     private ZonedDateTime resetDate = null;
 
     @JsonIgnore
@@ -146,11 +143,11 @@ public class User extends AbstractAuditingEntity implements Serializable {
     }
 
     public ZonedDateTime getResetDate() {
-       return resetDate;
+        return resetDate;
     }
 
     public void setResetDate(ZonedDateTime resetDate) {
-       this.resetDate = resetDate;
+        this.resetDate = resetDate;
     }
 
     public String getLangKey() {
