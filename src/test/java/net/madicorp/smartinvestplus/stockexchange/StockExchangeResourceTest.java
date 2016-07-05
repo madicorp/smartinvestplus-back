@@ -1,20 +1,15 @@
 package net.madicorp.smartinvestplus.stockexchange;
 
-import net.madicorp.smartinvestplus.JsonPathAssertion;
-import net.madicorp.smartinvestplus.config.JerseyConfig;
-import net.madicorp.smartinvestplus.config.JerseyMapperProvider;
-import org.assertj.core.api.Assertions;
-import org.glassfish.jersey.server.ServerProperties;
-import org.glassfish.jersey.test.JerseyTest;
-import org.junit.Before;
+import net.madicorp.smartinvestplus.test.HttpTestHelperBuilder;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
-import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 import java.util.Collections;
 
+import static net.madicorp.smartinvestplus.stockexchange.StockExchangeMockData.stockExchange;
+import static net.madicorp.smartinvestplus.test.HttpTestHelperBuilder.builder;
 import static org.mockito.Mockito.when;
 
 /**
@@ -23,22 +18,19 @@ import static org.mockito.Mockito.when;
  * Time: 15:39
  */
 
-public class StockExchangeResourceTest extends JerseyTest {
+public class StockExchangeResourceTest {
+    private static HttpTestHelperBuilder.HttpTestHelper helper;
+    private static StockExchangeRepository mockRepo;
 
-    private ApplicationContext context;
-    private StockExchangeRepository mockRepo;
-
-    @Override
-    protected Application configure() {
-        context = new AnnotationConfigApplicationContext(StockExchangeResourceTestConfig.class);
-        return new JerseyConfig()
-            .property(ServerProperties.PROVIDER_CLASSNAMES, JerseyMapperProvider.class.getCanonicalName())
-            .property("contextConfig", context);
+    @BeforeClass
+    public static void initContext() throws Exception {
+        helper = builder(() -> StockExchangeResourceTestConfig.class).build();
+        mockRepo = helper.context().getBean(StockExchangeRepository.class);
     }
 
-    @Before
-    public void initMockRepo() throws Exception {
-        mockRepo = context.getBeansOfType(StockExchangeRepository.class).values().iterator().next();
+    @AfterClass
+    public static void closeHelper() throws Exception {
+        helper.tearDown();
     }
 
     @Test
@@ -47,15 +39,14 @@ public class StockExchangeResourceTest extends JerseyTest {
         when(mockRepo.findAll()).thenReturn(Collections.singletonList(stockExchange()));
 
         // WHEN
-        Response stockExchangesResp = target("/api/stock-exchanges/").request().get();
+        Response actual = helper.target("/api/stock-exchanges/").request().get();
 
         // THEN
-        Assertions.assertThat(stockExchangesResp.getStatus()).isEqualTo(200);
-        String json = stockExchangesResp.readEntity(String.class);
-        JsonPathAssertion.assertThat(json)
-                         .hasSize("$", 1)
-                         .contains("$[0].symbol", "BRVM")
-                         .contains("$[0].links[0]", "/api/stock-exchanges/BRVM/securities/sec_1");
+        helper.assertThat(actual)
+              .success()
+              .hasSize("$", 1)
+              .contains("$[0].symbol", "BRVM")
+              .contains("$[0].links[0]", "/api/stock-exchanges/BRVM/securities/sec_1");
     }
 
     @Test
@@ -64,15 +55,14 @@ public class StockExchangeResourceTest extends JerseyTest {
         when(mockRepo.findOne("BRVM")).thenReturn(stockExchange());
 
         // WHEN
-        Response stockExchangeResp = target("/api/stock-exchanges/BRVM").request().get();
+        Response actual = helper.target("/api/stock-exchanges/BRVM").request().get();
 
         // THEN
-        Assertions.assertThat(stockExchangeResp.getStatus()).isEqualTo(200);
-        String json = stockExchangeResp.readEntity(String.class);
-        JsonPathAssertion.assertThat(json)
-                         .hasSize("$.links", 2)
-                         .contains("$.symbol", "BRVM")
-                         .contains("$.links[0]", "/api/stock-exchanges/BRVM/securities/sec_1");
+        helper.assertThat(actual)
+              .success()
+              .hasSize("$.links", 2)
+              .contains("$.symbol", "BRVM")
+              .contains("$.links[0]", "/api/stock-exchanges/BRVM/securities/sec_1");
     }
 
     @Test
@@ -81,27 +71,12 @@ public class StockExchangeResourceTest extends JerseyTest {
         when(mockRepo.findOne("BRVM")).thenReturn(null);
 
         // WHEN
-        Response stockExchangeResp = target("/api/stock-exchanges/BRVM").request().get();
+        Response actual = helper.target("/api/stock-exchanges/BRVM").request().get();
 
         // THEN
-        Assertions.assertThat(stockExchangeResp.getStatus()).isEqualTo(404);
-        Assertions.assertThat(stockExchangeResp.readEntity(String.class))
-                  .isEqualTo("Stock exchange 'BRVM' has not been found");
-    }
-
-    private StockExchangeWithSecurities stockExchange() {
-        StockExchangeWithSecurities stockExchange = new StockExchangeWithSecurities();
-        stockExchange.setSymbol("BRVM");
-        stockExchange.setName("Bourse Régionale des VM");
-        stockExchange.getSecurities().add(security(1));
-        stockExchange.getSecurities().add(security(2));
-        return stockExchange;
-    }
-
-    private Security security(int idx) {
-        Security security = new Security();
-        security.setSymbol("sec_" + idx);
-        return security;
+        helper.assertThat(actual)
+              .notFound()
+              .payloadIsEqualTo("Stock exchange 'BRVM' has not been found");
     }
 
 }

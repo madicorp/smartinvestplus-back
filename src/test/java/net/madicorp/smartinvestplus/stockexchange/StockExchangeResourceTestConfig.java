@@ -22,7 +22,17 @@ public class StockExchangeResourceTestConfig {
     }
 
     @Bean
+    public SecuritiesResource securitiesResource() {
+        return new SecuritiesResource();
+    }
+
+    @Bean
     public StockExchangeRepository stockExchangeRepository() {
         return mock(StockExchangeRepository.class);
+    }
+
+    @Bean
+    public StockExchangeService stockExchangeService() {
+        return new StockExchangeService();
     }
 }
