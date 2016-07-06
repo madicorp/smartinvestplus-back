@@ -15,6 +15,15 @@ public class StockExchangeMockData {
         return stockExchange;
     }
 
+    public static SecurityWithStockExchange security() {
+        SecurityWithStockExchange security = new SecurityWithStockExchange();
+        security.getStockExchange().setSymbol("BRVM");
+        security.getStockExchange().setName("Bourse Régionale des VM");
+        security.setName("Security 1");
+        security.setSymbol("sec_1");
+        return security;
+    }
+
     private static Security security(int idx) {
         Security security = new Security();
         security.setName("Security " + idx);

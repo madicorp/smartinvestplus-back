@@ -1,30 +1,22 @@
 package net.madicorp.smartinvestplus.config.dbmigrations;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.databind.introspect.VisibilityChecker;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.lordofthejars.nosqlunit.mongodb.InMemoryMongoDb;
 import com.lordofthejars.nosqlunit.mongodb.MongoDbRule;
 import com.mongodb.DB;
-import de.undercouch.bson4jackson.BsonModule;
 import net.madicorp.smartinvestplus.domain.Authority;
 import net.madicorp.smartinvestplus.stockexchange.CloseRate;
 import net.madicorp.smartinvestplus.stockexchange.StockExchangeWithSecurities;
 import org.assertj.core.api.Assertions;
 import org.jongo.Jongo;
-import org.jongo.Mapper;
 import org.jongo.MongoCollection;
 import org.jongo.MongoCursor;
-import org.jongo.marshall.jackson.JacksonMapper;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 
 import java.time.LocalDate;
 
 import static com.lordofthejars.nosqlunit.mongodb.InMemoryMongoDb.InMemoryMongoRuleBuilder.newInMemoryMongoDbRule;
 import static com.lordofthejars.nosqlunit.mongodb.MongoDbRule.MongoDbRuleBuilder.newMongoDbRule;
+import static net.madicorp.smartinvestplus.config.CommonDbConfiguration.jongoMapper;
 
 /**
  * User: sennen
@@ -119,13 +111,7 @@ public class InitialSetupMigrationTest {
     }
 
     private Jongo jongo() {
-        Mapper mapper = new JacksonMapper.Builder()
-            .registerModule(new BsonModule())
-            .registerModule(new JavaTimeModule())
-            .setVisibilityChecker(new VisibilityChecker.Std(
-                JsonAutoDetect.Visibility.PUBLIC_ONLY).withFieldVisibility(JsonAutoDetect.Visibility.NONE))
-            .build();
-        return new Jongo(db, mapper);
+        return new Jongo(db, jongoMapper());
     }
 
 }

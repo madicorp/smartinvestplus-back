@@ -1,15 +1,11 @@
 package net.madicorp.smartinvestplus.web.rest;
 
-import com.mongodb.Mongo;
-import net.madicorp.smartinvestplus.SmartinvestplusApp;
-import net.madicorp.smartinvestplus.domain.User;
+import net.madicorp.smartinvestplus.SmartInvestPlusApp;
 import net.madicorp.smartinvestplus.repository.UserRepository;
 import net.madicorp.smartinvestplus.service.UserService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.http.MediaType;
@@ -32,7 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @see UserResource
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = SmartinvestplusApp.class)
+@SpringApplicationConfiguration(classes = SmartInvestPlusApp.class)
 @WebAppConfiguration
 @IntegrationTest
 public class UserResourceIntTest {
@@ -42,10 +38,6 @@ public class UserResourceIntTest {
 
     @Inject
     private UserService userService;
-
-    @Autowired
-    @Qualifier("jongoMongo")
-    private Mongo jongoMongo;
 
     private MockMvc restUserMockMvc;
 

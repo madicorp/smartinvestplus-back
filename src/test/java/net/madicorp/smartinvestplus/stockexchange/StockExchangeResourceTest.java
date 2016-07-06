@@ -1,5 +1,6 @@
 package net.madicorp.smartinvestplus.stockexchange;
 
+import net.madicorp.smartinvestplus.stockexchange.repository.StockExchangeCRUDRepository;
 import net.madicorp.smartinvestplus.test.HttpTestHelperBuilder;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -20,12 +21,12 @@ import static org.mockito.Mockito.when;
 
 public class StockExchangeResourceTest {
     private static HttpTestHelperBuilder.HttpTestHelper helper;
-    private static StockExchangeRepository mockRepo;
+    private static StockExchangeCRUDRepository mockRepo;
 
     @BeforeClass
     public static void initContext() throws Exception {
         helper = builder(() -> StockExchangeResourceTestConfig.class).build();
-        mockRepo = helper.context().getBean(StockExchangeRepository.class);
+        mockRepo = helper.context().getBean(StockExchangeCRUDRepository.class);
     }
 
     @AfterClass

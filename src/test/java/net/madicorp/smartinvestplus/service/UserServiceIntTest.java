@@ -1,11 +1,10 @@
 package net.madicorp.smartinvestplus.service;
 
-import net.madicorp.smartinvestplus.SmartinvestplusApp;
+import net.madicorp.smartinvestplus.SmartInvestPlusApp;
 import net.madicorp.smartinvestplus.domain.User;
 import net.madicorp.smartinvestplus.repository.UserRepository;
 import java.time.ZonedDateTime;
 import net.madicorp.smartinvestplus.service.util.RandomUtil;
-import java.time.LocalDate;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.IntegrationTest;
@@ -25,7 +24,7 @@ import static org.assertj.core.api.Assertions.*;
  * @see UserService
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = SmartinvestplusApp.class)
+@SpringApplicationConfiguration(classes = SmartInvestPlusApp.class)
 @WebAppConfiguration
 @IntegrationTest
 public class UserServiceIntTest {

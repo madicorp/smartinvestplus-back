@@ -36,12 +36,12 @@ public class StockExchangeWithSecurities {
         return stockExchange.getSymbol();
     }
 
-    @JsonProperty
-    @NotNull
     public void setName(String name) {
         stockExchange.setName(name);
     }
 
+    @NotNull
+    @JsonProperty
     public String getName() {
         return stockExchange.getName();
     }

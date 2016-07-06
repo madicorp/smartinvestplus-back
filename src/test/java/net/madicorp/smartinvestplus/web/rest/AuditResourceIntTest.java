@@ -1,6 +1,6 @@
 package net.madicorp.smartinvestplus.web.rest;
 
-import net.madicorp.smartinvestplus.SmartinvestplusApp;
+import net.madicorp.smartinvestplus.SmartInvestPlusApp;
 import net.madicorp.smartinvestplus.config.audit.AuditEventConverter;
 import net.madicorp.smartinvestplus.domain.PersistentAuditEvent;
 import net.madicorp.smartinvestplus.repository.PersistenceAuditEventRepository;
@@ -32,7 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = SmartinvestplusApp.class)
+@SpringApplicationConfiguration(classes = SmartInvestPlusApp.class)
 @WebAppConfiguration
 @IntegrationTest
 public class AuditResourceIntTest {

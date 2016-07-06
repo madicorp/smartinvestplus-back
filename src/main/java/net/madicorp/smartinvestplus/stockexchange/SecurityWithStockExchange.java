@@ -13,7 +13,8 @@ import org.jongo.marshall.jackson.oid.MongoId;
 @NoArgsConstructor
 @EqualsAndHashCode(of = {"symbol"})
 @ToString
-public class Security {
+public class SecurityWithStockExchange {
+    private StockExchange stockExchange = new StockExchange();
     private String name;
     @MongoId
     private String symbol;

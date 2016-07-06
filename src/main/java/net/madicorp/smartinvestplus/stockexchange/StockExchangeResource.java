@@ -1,5 +1,6 @@
 package net.madicorp.smartinvestplus.stockexchange;
 
+import net.madicorp.smartinvestplus.stockexchange.repository.StockExchangeCRUDRepository;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -27,7 +28,7 @@ public class StockExchangeResource {
     private UriInfo uriInfo;
 
     @Inject
-    private StockExchangeRepository repository;
+    private StockExchangeCRUDRepository repository;
 
     @Inject
     private StockExchangeService stockExchangeService;

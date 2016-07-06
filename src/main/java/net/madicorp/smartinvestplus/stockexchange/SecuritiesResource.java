@@ -33,7 +33,7 @@ public class SecuritiesResource {
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON_VALUE)
-    public JSONArray getStockExchanges(@PathParam("stock-exchange-symbol") String stockExchangeSymbol) {
+    public JSONArray getSecurities(@PathParam("stock-exchange-symbol") String stockExchangeSymbol) {
         log.debug("REST request to get securities in stock exchange '{}'", stockExchangeSymbol);
         StockExchangeWithSecurities stockExchange =
             service.getStockExchange(stockExchangeSymbol)
@@ -46,6 +46,21 @@ public class SecuritiesResource {
                             .collect(JSONArray::new,
                                      JSONArray::put,
                                      JSONArray::put);
+    }
+
+    /**
+     * GET  /api/stock-exchanges/{stock-exchange-symbol}/securities/{security-symbol} : Get specific security.
+     *
+     * @return SecurityWithStockExchange security and the stock exchange it is located in.
+     */
+    @GET
+    @Path("/{security-symbol}/")
+    @Produces(MediaType.APPLICATION_JSON_VALUE)
+    public SecurityWithStockExchange getSecurity(@PathParam("stock-exchange-symbol") String stockExchangeSymbol,
+                                                 @PathParam("security-symbol") String securitySymbol) {
+        log.debug("REST request to get security '{}' in stock exchange '{}'", securitySymbol, stockExchangeSymbol);
+        return service.getSecurity(stockExchangeSymbol, securitySymbol)
+                  .orElseThrow(() -> new StockExchangeNotFoundException(stockExchangeSymbol));
     }
 
     private JSONObject buildSecurityJSON(Security security, UriBuilder uriBuilder) {

@@ -1,9 +1,12 @@
 package net.madicorp.smartinvestplus.stockexchange;
 
 import net.madicorp.smartinvestplus.config.JacksonConfiguration;
+import net.madicorp.smartinvestplus.stockexchange.repository.StockExchangeCRUDRepository;
+import net.madicorp.smartinvestplus.stockexchange.repository.StockExchangeRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.PropertySource;
 
 import static org.mockito.Mockito.mock;
 
@@ -24,6 +27,11 @@ public class StockExchangeResourceTestConfig {
     @Bean
     public SecuritiesResource securitiesResource() {
         return new SecuritiesResource();
+    }
+
+    @Bean
+    public StockExchangeCRUDRepository stockExchangeCRUDRepository() {
+        return mock(StockExchangeCRUDRepository.class);
     }
 
     @Bean

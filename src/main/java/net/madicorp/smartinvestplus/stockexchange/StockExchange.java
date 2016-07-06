@@ -19,6 +19,7 @@ import java.util.List;
 @EqualsAndHashCode(of={"symbol"})
 @ToString(of = {"symbol", "name"})
 public class StockExchange {
+    @MongoId
     private String symbol;
     private String name;
 }

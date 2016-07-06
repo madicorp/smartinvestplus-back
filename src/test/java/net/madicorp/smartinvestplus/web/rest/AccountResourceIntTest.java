@@ -1,6 +1,6 @@
 package net.madicorp.smartinvestplus.web.rest;
 
-import net.madicorp.smartinvestplus.SmartinvestplusApp;
+import net.madicorp.smartinvestplus.SmartInvestPlusApp;
 import net.madicorp.smartinvestplus.domain.Authority;
 import net.madicorp.smartinvestplus.domain.User;
 import net.madicorp.smartinvestplus.repository.AuthorityRepository;
@@ -42,7 +42,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @see UserService
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = SmartinvestplusApp.class)
+@SpringApplicationConfiguration(classes = SmartInvestPlusApp.class)
 @WebAppConfiguration
 @IntegrationTest
 public class AccountResourceIntTest {
