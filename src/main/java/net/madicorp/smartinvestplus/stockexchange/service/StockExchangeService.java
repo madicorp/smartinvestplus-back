@@ -1,5 +1,7 @@
-package net.madicorp.smartinvestplus.stockexchange;
+package net.madicorp.smartinvestplus.stockexchange.service;
 
+import net.madicorp.smartinvestplus.stockexchange.domain.SecurityWithStockExchange;
+import net.madicorp.smartinvestplus.stockexchange.domain.StockExchangeWithSecurities;
 import net.madicorp.smartinvestplus.stockexchange.repository.StockExchangeCRUDRepository;
 import net.madicorp.smartinvestplus.stockexchange.repository.StockExchangeRepository;
 import org.springframework.stereotype.Service;

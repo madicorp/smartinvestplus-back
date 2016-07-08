@@ -1,6 +1,6 @@
 package net.madicorp.smartinvestplus.stockexchange.repository;
 
-import net.madicorp.smartinvestplus.stockexchange.StockExchangeWithSecurities;
+import net.madicorp.smartinvestplus.stockexchange.domain.StockExchangeWithSecurities;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 /**

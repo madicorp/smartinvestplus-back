@@ -1,4 +1,4 @@
-package net.madicorp.smartinvestplus.stockexchange;
+package net.madicorp.smartinvestplus.stockexchange.domain;
 
 import lombok.*;
 import org.jongo.marshall.jackson.oid.MongoId;
@@ -14,7 +14,8 @@ import org.jongo.marshall.jackson.oid.MongoId;
 @EqualsAndHashCode(of = {"symbol"})
 @ToString
 public class Security {
-    private String name;
     @MongoId
     private String symbol;
+    private String name;
+    private boolean generated = false;
 }

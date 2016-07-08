@@ -1,6 +1,8 @@
-package net.madicorp.smartinvestplus.stockexchange;
+package net.madicorp.smartinvestplus.stockexchange.resource;
 
+import net.madicorp.smartinvestplus.stockexchange.domain.StockExchangeWithSecurities;
 import net.madicorp.smartinvestplus.stockexchange.repository.StockExchangeCRUDRepository;
+import net.madicorp.smartinvestplus.stockexchange.service.StockExchangeService;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;

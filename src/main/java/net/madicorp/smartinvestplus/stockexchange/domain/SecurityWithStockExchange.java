@@ -1,4 +1,4 @@
-package net.madicorp.smartinvestplus.stockexchange;
+package net.madicorp.smartinvestplus.stockexchange.domain;
 
 import lombok.*;
 import org.jongo.marshall.jackson.oid.MongoId;

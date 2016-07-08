@@ -11,9 +11,9 @@ import net.madicorp.smartinvestplus.domain.Authority;
 import net.madicorp.smartinvestplus.domain.User;
 import net.madicorp.smartinvestplus.service.mustache.ListStringMustacheTemplate;
 import net.madicorp.smartinvestplus.service.mustache.MustacheService;
-import net.madicorp.smartinvestplus.stockexchange.CloseRate;
-import net.madicorp.smartinvestplus.stockexchange.Security;
-import net.madicorp.smartinvestplus.stockexchange.StockExchangeWithSecurities;
+import net.madicorp.smartinvestplus.stockexchange.domain.CloseRate;
+import net.madicorp.smartinvestplus.stockexchange.domain.Security;
+import net.madicorp.smartinvestplus.stockexchange.domain.StockExchangeWithSecurities;
 import org.jongo.Jongo;
 import org.jongo.Mapper;
 import org.jongo.MongoCollection;
@@ -32,6 +32,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+
+import static net.madicorp.smartinvestplus.config.CommonDbConfiguration.jongoMapper;
 
 /**
  * Creates the initial database setup
@@ -73,7 +75,7 @@ public class InitialSetupMigration {
         brvm.setName("Bourse régionale des valeurs Mobilières");
         brvm.setSymbol("BRVM");
 
-        ClassPathResource titlesResource = new ClassPathResource("config/mongobee/changeset-1/titles.csv");
+        ClassPathResource titlesResource = new ClassPathResource("config/mongobee/changeset_1/titles.csv");
         try (BufferedReader reader = new BufferedReader(new FileReader(titlesResource.getFile()))) {
             reader.lines()
                   // Skip header
@@ -87,27 +89,26 @@ public class InitialSetupMigration {
         stockExchanges.insert(brvm);
     }
 
-    @ChangeSet(order = "04", author = "initiator", id = "04-addClosingPrices")
-    public void addClosingPrices(DB db) {
+    @ChangeSet(order = "04", author = "initiator", id = "04-addCloseRates")
+    public void addCloseRates(DB db) {
         PathMatchingResourcePatternResolver resourcePatternResolver = new PathMatchingResourcePatternResolver();
-        Resource[] closePricesResources;
+        Resource[] closeRatesFiles;
         try {
-            closePricesResources =
-                resourcePatternResolver.getResources("config/mongobee/changeset-1/close/*.csv");
+            closeRatesFiles = resourcePatternResolver.getResources("config/mongobee/changeset_1/close_rates/*.csv");
         } catch (IOException e) {
             throw new MigrationException("Unexpected exception reading file", e);
         }
-        for (Resource closePricesResource : closePricesResources) {
-            insertClosingPrices(db, closePricesResource);
+        for (Resource closeRatesFile : closeRatesFiles) {
+            insertCloseRates(db, closeRatesFile);
         }
     }
 
-    private void insertClosingPrices(DB db, Resource closePricesResource) {
-        String closePricesResourceFileName = closePricesResource.getFilename();
+    private void insertCloseRates(DB db, Resource closeRatesFile) {
+        String closeRatesFileName = closeRatesFile.getFilename();
         MongoCollection closingPricesCollection =
-            collection(db, closePricesResourceFileName.replace(".csv", "") + "_closing_prices");
+            collection(db, closeRatesFileName.replace(".csv", "").toLowerCase() + "_close_rates");
         closingPricesCollection.ensureIndex(mongoIndex("date"));
-        try (BufferedReader reader = new BufferedReader(new FileReader(closePricesResource.getFile()))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(closeRatesFile.getFile()))) {
             CloseRate[] closeRates = reader.lines()
                                            // Skip header
                                            .skip(1)
@@ -138,13 +139,7 @@ public class InitialSetupMigration {
     }
 
     private static MongoCollection collection(DB db, String name) {
-        Mapper mapper = new JacksonMapper.Builder().registerModule(new BsonModule())
-                                                   .registerModule(new JavaTimeModule())
-                                                   .setVisibilityChecker(new VisibilityChecker.Std(
-                                                       JsonAutoDetect.Visibility.PUBLIC_ONLY).withFieldVisibility(
-                                                       JsonAutoDetect.Visibility.NONE))
-                                                   .build();
-        Jongo jongo = new Jongo(db, mapper);
+        Jongo jongo = new Jongo(db, jongoMapper());
         return jongo.getCollection(name);
     }
 

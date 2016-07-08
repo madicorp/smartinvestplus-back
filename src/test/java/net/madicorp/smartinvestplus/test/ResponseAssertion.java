@@ -2,8 +2,6 @@ package net.madicorp.smartinvestplus.test;
 
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.api.Assertions;
-import org.hamcrest.Matchers;
-import org.springframework.test.util.JsonPathExpectationsHelper;
 
 import javax.ws.rs.core.Response;
 import java.text.ParseException;
@@ -15,6 +13,7 @@ import java.text.ParseException;
  */
 public class ResponseAssertion extends AbstractAssert<ResponseAssertion, Response> {
     private String actualJsonPayload;
+    private JsonAssertion jsonAssertion;
 
     private ResponseAssertion(Response actual) {
         super(actual, ResponseAssertion.class);
@@ -48,16 +47,20 @@ public class ResponseAssertion extends AbstractAssert<ResponseAssertion, Respons
 
     public <T> ResponseAssertion contains(String jsonPath, T expectedValue) throws ParseException {
         isNotNull();
-        JsonPathExpectationsHelper jsonPathExpectationsHelper = new JsonPathExpectationsHelper(jsonPath);
-        jsonPathExpectationsHelper.assertValue(getPayload(), expectedValue);
+        getJsonAssertion().contains(jsonPath, expectedValue);
         return this;
     }
 
     public ResponseAssertion hasSize(String jsonPath, int expectedSize) throws ParseException {
-        isNotNull();
-        JsonPathExpectationsHelper jsonPathExpectationsHelper = new JsonPathExpectationsHelper(jsonPath);
-        jsonPathExpectationsHelper.assertValue(getPayload(), Matchers.hasSize(expectedSize));
+        getJsonAssertion().hasSize(jsonPath, expectedSize);
         return this;
+    }
+
+    private JsonAssertion getJsonAssertion() {
+        if (jsonAssertion == null) {
+            jsonAssertion = JsonAssertion.assertThat(getPayload());
+        }
+        return jsonAssertion;
     }
 
     private String getPayload() {

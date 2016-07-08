@@ -1,4 +1,4 @@
-package net.madicorp.smartinvestplus.stockexchange;
+package net.madicorp.smartinvestplus.stockexchange.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;

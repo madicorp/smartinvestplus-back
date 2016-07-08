@@ -1,12 +1,15 @@
-package net.madicorp.smartinvestplus.stockexchange;
+package net.madicorp.smartinvestplus.stockexchange.resource;
 
 import net.madicorp.smartinvestplus.config.JacksonConfiguration;
+import net.madicorp.smartinvestplus.date.DateService;
+import net.madicorp.smartinvestplus.stockexchange.repository.CloseRateRepository;
 import net.madicorp.smartinvestplus.stockexchange.repository.StockExchangeCRUDRepository;
 import net.madicorp.smartinvestplus.stockexchange.repository.StockExchangeRepository;
+import net.madicorp.smartinvestplus.stockexchange.service.CloseRateService;
+import net.madicorp.smartinvestplus.stockexchange.service.StockExchangeService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.PropertySource;
 
 import static org.mockito.Mockito.mock;
 
@@ -42,5 +45,20 @@ public class StockExchangeResourceTestConfig {
     @Bean
     public StockExchangeService stockExchangeService() {
         return new StockExchangeService();
+    }
+
+    @Bean
+    public CloseRateService closeRateService() {
+        return mock(CloseRateService.class);
+    }
+
+    @Bean
+    public CloseRateRepository closeRateRepository() {
+        return mock(CloseRateRepository.class);
+    }
+
+    @Bean
+    public DateService dateService() {
+        return mock(DateService.class);
     }
 }

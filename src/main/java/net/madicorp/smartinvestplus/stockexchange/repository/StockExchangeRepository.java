@@ -1,6 +1,6 @@
 package net.madicorp.smartinvestplus.stockexchange.repository;
 
-import net.madicorp.smartinvestplus.stockexchange.SecurityWithStockExchange;
+import net.madicorp.smartinvestplus.stockexchange.domain.SecurityWithStockExchange;
 
 /**
  * User: sennen

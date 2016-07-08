@@ -1,4 +1,4 @@
-package net.madicorp.smartinvestplus.stockexchange;
+package net.madicorp.smartinvestplus.stockexchange.repository;
 
 import net.madicorp.smartinvestplus.config.DatabaseConfiguration;
 import net.madicorp.smartinvestplus.security.SpringSecurityAuditorAware;

@@ -2,9 +2,10 @@ package net.madicorp.smartinvestplus.config;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.databind.introspect.VisibilityChecker;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.mongodb.DB;
 import de.undercouch.bson4jackson.BsonModule;
+import net.madicorp.smartinvestplus.date.LocalDateDeserializer;
+import net.madicorp.smartinvestplus.date.LocalDateSerializer;
 import net.madicorp.smartinvestplus.domain.util.JSR310DateConverters;
 import org.jongo.Jongo;
 import org.jongo.Mapper;
@@ -16,6 +17,7 @@ import org.springframework.data.mongodb.core.convert.CustomConversions;
 import org.springframework.data.mongodb.core.mapping.event.ValidatingMongoEventListener;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -54,7 +56,8 @@ public class CommonDbConfiguration {
     public static Mapper jongoMapper() {
         return new JacksonMapper.Builder()
             .registerModule(new BsonModule())
-            .registerModule(new JavaTimeModule())
+            .addSerializer(LocalDate.class, new LocalDateSerializer())
+            .addDeserializer(LocalDate.class, new LocalDateDeserializer())
             .setVisibilityChecker(new VisibilityChecker.Std(
                 JsonAutoDetect.Visibility.PUBLIC_ONLY).withFieldVisibility(JsonAutoDetect.Visibility.NONE))
             .build();

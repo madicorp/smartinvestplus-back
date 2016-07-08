@@ -1,5 +1,12 @@
-package net.madicorp.smartinvestplus.stockexchange;
+package net.madicorp.smartinvestplus.stockexchange.resource;
 
+import net.madicorp.smartinvestplus.stockexchange.domain.CloseRate;
+import net.madicorp.smartinvestplus.stockexchange.domain.Security;
+import net.madicorp.smartinvestplus.stockexchange.domain.SecurityWithStockExchange;
+import net.madicorp.smartinvestplus.stockexchange.domain.StockExchangeWithSecurities;
+import net.madicorp.smartinvestplus.stockexchange.service.CloseRateService;
+import net.madicorp.smartinvestplus.stockexchange.service.IncompleteDataHistoryException;
+import net.madicorp.smartinvestplus.stockexchange.service.StockExchangeService;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -13,6 +20,8 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
+import java.time.LocalDate;
+import java.util.Iterator;
 
 @Component
 @Path("/api/stock-exchanges/{stock-exchange-symbol}/securities/")
@@ -23,7 +32,10 @@ public class SecuritiesResource {
     private UriInfo uriInfo;
 
     @Inject
-    private StockExchangeService service;
+    private StockExchangeService stockExchangeService;
+
+    @Inject
+    private CloseRateService closeRateService;
 
     /**
      * GET  /api/stock-exchanges/{stock-exchange-symbol}/securities : Get all securities in a particular stock exchange
@@ -36,8 +48,8 @@ public class SecuritiesResource {
     public JSONArray getSecurities(@PathParam("stock-exchange-symbol") String stockExchangeSymbol) {
         log.debug("REST request to get securities in stock exchange '{}'", stockExchangeSymbol);
         StockExchangeWithSecurities stockExchange =
-            service.getStockExchange(stockExchangeSymbol)
-                   .orElseThrow(() -> new StockExchangeNotFoundException(stockExchangeSymbol));
+            stockExchangeService.getStockExchange(stockExchangeSymbol)
+                                .orElseThrow(() -> new StockExchangeNotFoundException(stockExchangeSymbol));
         UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path("{securitySymbol}");
         return stockExchange.getSecurities()
                             .stream()
@@ -59,8 +71,8 @@ public class SecuritiesResource {
     public SecurityWithStockExchange getSecurity(@PathParam("stock-exchange-symbol") String stockExchangeSymbol,
                                                  @PathParam("security-symbol") String securitySymbol) {
         log.debug("REST request to get security '{}' in stock exchange '{}'", securitySymbol, stockExchangeSymbol);
-        return service.getSecurity(stockExchangeSymbol, securitySymbol)
-                  .orElseThrow(() -> new StockExchangeNotFoundException(stockExchangeSymbol));
+        return stockExchangeService.getSecurity(stockExchangeSymbol, securitySymbol)
+                                   .orElseThrow(() -> new StockExchangeNotFoundException(stockExchangeSymbol));
     }
 
     private JSONObject buildSecurityJSON(Security security, UriBuilder uriBuilder) {
@@ -74,12 +86,20 @@ public class SecuritiesResource {
         return jsonSecurity;
     }
 
-//    @Path("/securities/{security-symbol}")
-//    @GET
-//    @Produces(MediaType.APPLICATION_JSON_VALUE)
-//    @Secured(AuthoritiesConstants.ANONYMOUS)
-//    public JSONObject getStockExchange(@PathParam("stock-exchange-symbol") String stockExchangeSymbol,
-//                                       @PathParam("security-symbol") String securitySymbol) {
-//        log.debug("REST request to get security '{}' in stock exchange '{}'", securitySymbol, stockExchangeSymbol);
-//    }
+    @Path("/{security-symbol}/close-rates/")
+    @GET
+    @Produces(MediaType.APPLICATION_JSON_VALUE)
+    public Iterator<CloseRate> getStockExchange(@PathParam("stock-exchange-symbol") String stockExchangeSymbol,
+                                                @PathParam("security-symbol") String securitySymbol) {
+        log.debug("REST request to get close rates one month to date for security '{}' in stock exchange '{}'",
+                  securitySymbol, stockExchangeSymbol);
+        try {
+            Iterator<CloseRate> oneMonthToDateCloseRates =
+                closeRateService.getOneMonthToDateCloseRates(stockExchangeSymbol, securitySymbol, LocalDate.now());
+            closeRateService.saveGenerated(stockExchangeSymbol, securitySymbol, oneMonthToDateCloseRates);
+            return oneMonthToDateCloseRates;
+        } catch (IncompleteDataHistoryException e) {
+            throw new BadRequestException(e);
+        }
+    }
 }

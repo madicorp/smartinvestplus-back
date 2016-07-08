@@ -1,9 +1,9 @@
-package net.madicorp.smartinvestplus.stockexchange;
+package net.madicorp.smartinvestplus.stockexchange.repository;
 
 import com.lordofthejars.nosqlunit.annotation.UsingDataSet;
 import com.lordofthejars.nosqlunit.core.LoadStrategyEnum;
 import com.lordofthejars.nosqlunit.mongodb.MongoDbRule;
-import net.madicorp.smartinvestplus.stockexchange.repository.StockExchangeRepository;
+import net.madicorp.smartinvestplus.stockexchange.domain.SecurityWithStockExchange;
 import org.assertj.core.api.Assertions;
 import org.junit.Rule;
 import org.junit.Test;
@@ -22,13 +22,13 @@ import static com.lordofthejars.nosqlunit.mongodb.MongoDbConfigurationBuilder.mo
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = RepositoryTestConfig.class, initializers = ConfigFileApplicationContextInitializer.class)
-public class StockExchangeRepositoryTest {
+public class JongoStockExchangeRepositoryTest {
     @Rule
     public MongoDbRule remoteMongoDbRule =
         new MongoDbRule(mongoDb().port(RepositoryTestConfig.MONGO_PORT).databaseName("smartinvestplus").build());
 
     @Autowired
-    private StockExchangeRepository subject;
+    private JongoStockExchangeRepository subject;
 
     @Test
     @UsingDataSet(locations = "/data/stock_exchanges.json", loadStrategy = LoadStrategyEnum.CLEAN_INSERT)

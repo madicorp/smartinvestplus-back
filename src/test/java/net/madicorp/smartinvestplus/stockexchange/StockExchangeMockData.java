@@ -1,5 +1,12 @@
 package net.madicorp.smartinvestplus.stockexchange;
 
+import net.madicorp.smartinvestplus.stockexchange.domain.CloseRate;
+import net.madicorp.smartinvestplus.stockexchange.domain.Security;
+import net.madicorp.smartinvestplus.stockexchange.domain.SecurityWithStockExchange;
+import net.madicorp.smartinvestplus.stockexchange.domain.StockExchangeWithSecurities;
+
+import java.time.LocalDate;
+
 /**
  * User: sennen
  * Date: 05/07/2016
@@ -29,5 +36,17 @@ public class StockExchangeMockData {
         security.setName("Security " + idx);
         security.setSymbol("sec_" + idx);
         return security;
+    }
+
+    public static CloseRate closeRate(LocalDate date, double rate) {
+        return closeRate(date, rate, false);
+    }
+
+    public static CloseRate closeRate(LocalDate date, double rate, boolean generated) {
+        CloseRate closeRate = new CloseRate();
+        closeRate.setDate(date);
+        closeRate.setRate(rate);
+        closeRate.setGenerated(generated);
+        return closeRate;
     }
 }

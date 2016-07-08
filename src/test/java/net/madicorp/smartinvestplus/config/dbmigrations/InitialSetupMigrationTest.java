@@ -4,8 +4,8 @@ import com.lordofthejars.nosqlunit.mongodb.InMemoryMongoDb;
 import com.lordofthejars.nosqlunit.mongodb.MongoDbRule;
 import com.mongodb.DB;
 import net.madicorp.smartinvestplus.domain.Authority;
-import net.madicorp.smartinvestplus.stockexchange.CloseRate;
-import net.madicorp.smartinvestplus.stockexchange.StockExchangeWithSecurities;
+import net.madicorp.smartinvestplus.stockexchange.domain.CloseRate;
+import net.madicorp.smartinvestplus.stockexchange.domain.StockExchangeWithSecurities;
 import org.assertj.core.api.Assertions;
 import org.jongo.Jongo;
 import org.jongo.MongoCollection;
@@ -86,22 +86,22 @@ public class InitialSetupMigrationTest {
     }
 
     @Test
-    public void should_add_closing_prices() throws Exception {
+    public void should_add_close_rates() throws Exception {
         // GIVEN
 
         // WHEN
-        subject.addClosingPrices(db);
+        subject.addCloseRates(db);
 
         // THEN
         Jongo jongo = jongo();
-        MongoCollection airLiquideCiClosingPrices = jongo.getCollection("BRVM_SIVC_closing_prices");
-        LocalDate firstAirLiquideDate = airLiquideCiClosingPrices.find()
+        MongoCollection airLiquideCiCloseRates = jongo.getCollection("brvm_sivc_close_rates");
+        LocalDate firstAirLiquideDate = airLiquideCiCloseRates.find()
                                                                  .limit(1)
                                                                  .as(CloseRate.class)
                                                                  .next()
                                                                  .getDate();
         Assertions.assertThat(firstAirLiquideDate).isEqualTo("2016-03-18");
-        LocalDate lastAirLiguideDate = airLiquideCiClosingPrices.find()
+        LocalDate lastAirLiguideDate = airLiquideCiCloseRates.find()
                                                                 .sort("{_id:-1}")
                                                                 .limit(1)
                                                                 .as(CloseRate.class)

@@ -1,4 +1,4 @@
-package net.madicorp.smartinvestplus.stockexchange;
+package net.madicorp.smartinvestplus.stockexchange.resource;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
