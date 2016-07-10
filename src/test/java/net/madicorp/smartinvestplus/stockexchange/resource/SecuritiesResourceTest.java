@@ -60,7 +60,10 @@ public class SecuritiesResourceTest {
               .hasSize("$", 2)
               .contains("$[0].symbol", "sec_1")
               .contains("$[0].name", "Security 1")
-              .contains("$[0].link", "/api/stock-exchanges/BRVM/securities/sec_1");
+              .contains("$[0].links[0].rel", "self")
+              .contains("$[0].links[0].href", "/api/stock-exchanges/BRVM/securities/sec_1")
+              .contains("$[0].links[1].rel", "close-rates")
+              .contains("$[0].links[1].href", "/api/stock-exchanges/BRVM/securities/sec_1/close-rates");
     }
 
     @Test

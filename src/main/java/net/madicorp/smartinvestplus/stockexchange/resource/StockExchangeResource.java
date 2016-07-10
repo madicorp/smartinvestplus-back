@@ -1,5 +1,7 @@
 package net.madicorp.smartinvestplus.stockexchange.resource;
 
+import net.madicorp.smartinvestplus.domain.JSONHyperlinkBuilder;
+import net.madicorp.smartinvestplus.stockexchange.domain.Security;
 import net.madicorp.smartinvestplus.stockexchange.domain.StockExchangeWithSecurities;
 import net.madicorp.smartinvestplus.stockexchange.repository.StockExchangeCRUDRepository;
 import net.madicorp.smartinvestplus.stockexchange.service.StockExchangeService;
@@ -16,7 +18,6 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
-import java.net.URI;
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -66,22 +67,32 @@ public class StockExchangeResource {
         return this.buildStockExchangeJSON(stockExchange, () -> uriInfo.getAbsolutePathBuilder());
     }
 
-    private JSONObject buildStockExchangeJSON(StockExchangeWithSecurities stockExchangeWithSecurities,
+    private JSONObject buildStockExchangeJSON(StockExchangeWithSecurities stockExchange,
                                               Supplier<UriBuilder> uriBuilderSupplier) {
-        JSONObject stockExchangeJSON = new JSONObject(stockExchangeWithSecurities.getStockExchange());
+        JSONObject stockExchangeJSON = new JSONObject(stockExchange.getStockExchange());
         UriBuilder securityURIBuilder = uriBuilderSupplier.get().path("securities").path("{arg1}");
-        List<String> links = stockExchangeWithSecurities.getSecurities()
-                                                        .stream()
-                                                        .map(security -> securityURIBuilder.build(security.getSymbol()))
-                                                        .map(URI::getPath)
-                                                        .collect(Collectors.toList());
+        List<JSONObject> securitiesHyperlinks =
+            stockExchange.getSecurities()
+                         .stream()
+                         .map(security -> getSecurities(securityURIBuilder, security))
+                         .collect(Collectors.toList());
         try {
-            stockExchangeJSON.put("links", links);
+            stockExchangeJSON.put("links", securitiesHyperlinks);
         } catch (JSONException e) {
-            String linkErrorMessage =
-                String.format("Failed to parse links for stock exchanges %s", stockExchangeWithSecurities.getSymbol());
+            String linkErrorMessage = String.format("Failed to format securities for stock exchanges %s",
+                                                    stockExchange.getSymbol());
             throw new InternalServerErrorException(linkErrorMessage, e);
         }
         return stockExchangeJSON;
+    }
+
+    private JSONObject getSecurities(UriBuilder securityURIBuilder, Security security) {
+        try {
+            String href = securityURIBuilder.build(security.getSymbol()).getPath();
+            return JSONHyperlinkBuilder.init("security", href).build();
+        } catch (JSONException e) {
+            String linkErrorMessage = String.format("Failed to format security %s", security.getSymbol());
+            throw new InternalServerErrorException(linkErrorMessage, e);
+        }
     }
 }

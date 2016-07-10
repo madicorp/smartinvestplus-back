@@ -47,7 +47,8 @@ public class StockExchangeResourceTest {
               .success()
               .hasSize("$", 1)
               .contains("$[0].symbol", "BRVM")
-              .contains("$[0].links[0]", "/api/stock-exchanges/BRVM/securities/sec_1");
+              .contains("$[0].links[0].rel", "security")
+              .contains("$[0].links[0].href", "/api/stock-exchanges/BRVM/securities/sec_1");
     }
 
     @Test
@@ -63,7 +64,8 @@ public class StockExchangeResourceTest {
               .success()
               .hasSize("$.links", 2)
               .contains("$.symbol", "BRVM")
-              .contains("$.links[0]", "/api/stock-exchanges/BRVM/securities/sec_1");
+              .contains("$.links[0].rel", "security")
+              .contains("$.links[0].href", "/api/stock-exchanges/BRVM/securities/sec_1");
     }
 
     @Test

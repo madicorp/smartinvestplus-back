@@ -1,5 +1,6 @@
 package net.madicorp.smartinvestplus.stockexchange.resource;
 
+import net.madicorp.smartinvestplus.domain.JSONHyperlinkBuilder;
 import net.madicorp.smartinvestplus.stockexchange.domain.CloseRate;
 import net.madicorp.smartinvestplus.stockexchange.domain.Security;
 import net.madicorp.smartinvestplus.stockexchange.domain.SecurityWithStockExchange;
@@ -53,8 +54,7 @@ public class SecuritiesResource {
         UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path("{securitySymbol}");
         return stockExchange.getSecurities()
                             .stream()
-                            .map(security ->
-                                     this.buildSecurityJSON(security, uriBuilder))
+                            .map(security -> this.buildSecurityJSON(security, uriBuilder))
                             .collect(JSONArray::new,
                                      JSONArray::put,
                                      JSONArray::put);
@@ -78,9 +78,17 @@ public class SecuritiesResource {
     private JSONObject buildSecurityJSON(Security security, UriBuilder uriBuilder) {
         JSONObject jsonSecurity = new JSONObject(security);
         try {
-            jsonSecurity.put("link", uriBuilder.build(security.getSymbol()).getPath());
+            JSONArray links = new JSONArray();
+
+            String securityHref = uriBuilder.build(security.getSymbol()).getPath();
+            links.put(JSONHyperlinkBuilder.init("self", securityHref).build());
+
+            String closeRatesHref = uriBuilder.path("close-rates").build(security.getSymbol()).getPath();
+            links.put(JSONHyperlinkBuilder.init("close-rates", closeRatesHref).build());
+
+            jsonSecurity.put("links", links);
         } catch (JSONException e) {
-            String linkErrorMessage = String.format("Failed to parse link for security %s", security.getSymbol());
+            String linkErrorMessage = String.format("Failed to format links for security %s", security.getSymbol());
             throw new InternalServerErrorException(linkErrorMessage, e);
         }
         return jsonSecurity;
