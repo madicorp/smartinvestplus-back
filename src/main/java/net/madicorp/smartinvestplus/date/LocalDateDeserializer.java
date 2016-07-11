@@ -1,13 +1,17 @@
 package net.madicorp.smartinvestplus.date;
 
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.Arrays;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 /**
  * User: sennen
@@ -17,25 +21,18 @@ import java.time.format.DateTimeFormatter;
 public class LocalDateDeserializer extends JsonDeserializer<LocalDate> {
     @Override
     public LocalDate deserialize(JsonParser parser, DeserializationContext context) throws IOException {
-        if (parser.isExpectedStartObjectToken()) {
-            JsonToken token = parser.nextToken();
-            String tokenTextValue = parser.getText();
-            if (token != JsonToken.FIELD_NAME || !"$date" .equals(tokenTextValue)) {
-                String errorMsg =
-                    String.format("Expected $date field, received '%s' token and '%s' value for token",
-                                  token, tokenTextValue);
-                throw context.wrongTokenException(parser, JsonToken.FIELD_NAME, errorMsg);
+        byte[] binFormattedIsoDate = parser.getBinaryValue();
+        String formattedIsoDate = new String(binFormattedIsoDate, "UTF-8").replace("\u0000", "");
+        Matcher matcher = Pattern.compile("ISODATE\\(\"(?<date>.*)\"\\)")
+                                 .matcher(formattedIsoDate);
+        if(matcher.find()) {
+            String formattedDate = matcher.group("date");
+            try {
+                return LocalDate.parse(formattedDate, DateTimeFormatter.ISO_DATE_TIME);
+            } catch (DateTimeParseException e) {
+                throw context.weirdStringException(formattedDate, LocalDate.class, "Expected ISO-8601 formatted date.");
             }
-            String parsedDate = parser.nextTextValue();
-            token = parser.nextToken();
-            if (JsonToken.END_OBJECT != token) {
-                String errorMsg =
-                    String.format("Expected $date field to be the only one, but received '%s' token",
-                                  token);
-                throw context.wrongTokenException(parser, JsonToken.END_OBJECT, errorMsg);
-            }
-            return LocalDate.parse(parsedDate, DateTimeFormatter.ISO_DATE_TIME);
         }
-        throw context.wrongTokenException(parser, JsonToken.START_OBJECT, "Expected array or string.");
+        throw context.weirdStringException(formattedIsoDate, LocalDate.class, "Expected ISO-8601 formatted date.");
     }
 }

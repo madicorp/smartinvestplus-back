@@ -1,11 +1,9 @@
 package net.madicorp.smartinvestplus.stockexchange.resource;
 
 import net.madicorp.smartinvestplus.domain.JSONHyperlinkBuilder;
-import net.madicorp.smartinvestplus.stockexchange.domain.CloseRate;
-import net.madicorp.smartinvestplus.stockexchange.domain.Security;
-import net.madicorp.smartinvestplus.stockexchange.domain.SecurityWithStockExchange;
-import net.madicorp.smartinvestplus.stockexchange.domain.StockExchangeWithSecurities;
+import net.madicorp.smartinvestplus.stockexchange.domain.*;
 import net.madicorp.smartinvestplus.stockexchange.service.CloseRateService;
+import net.madicorp.smartinvestplus.stockexchange.service.DivisionAlreadyExistsException;
 import net.madicorp.smartinvestplus.stockexchange.service.IncompleteDataHistoryException;
 import net.madicorp.smartinvestplus.stockexchange.service.StockExchangeService;
 import org.json.JSONArray;
@@ -19,6 +17,7 @@ import org.springframework.stereotype.Component;
 import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 import java.time.LocalDate;
@@ -33,7 +32,7 @@ public class SecuritiesResource {
     private UriInfo uriInfo;
 
     @Inject
-    private StockExchangeService stockExchangeService;
+    private StockExchangeService stockExchService;
 
     @Inject
     private CloseRateService closeRateService;
@@ -49,8 +48,8 @@ public class SecuritiesResource {
     public JSONArray getSecurities(@PathParam("stock-exchange-symbol") String stockExchangeSymbol) {
         log.debug("REST request to get securities in stock exchange '{}'", stockExchangeSymbol);
         StockExchangeWithSecurities stockExchange =
-            stockExchangeService.getStockExchange(stockExchangeSymbol)
-                                .orElseThrow(() -> new StockExchangeNotFoundException(stockExchangeSymbol));
+            stockExchService.getStockExchange(stockExchangeSymbol)
+                            .orElseThrow(() -> new StockExchangeNotFoundException(stockExchangeSymbol));
         UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path("{securitySymbol}");
         return stockExchange.getSecurities()
                             .stream()
@@ -71,8 +70,7 @@ public class SecuritiesResource {
     public SecurityWithStockExchange getSecurity(@PathParam("stock-exchange-symbol") String stockExchangeSymbol,
                                                  @PathParam("security-symbol") String securitySymbol) {
         log.debug("REST request to get security '{}' in stock exchange '{}'", securitySymbol, stockExchangeSymbol);
-        return stockExchangeService.getSecurity(stockExchangeSymbol, securitySymbol)
-                                   .orElseThrow(() -> new StockExchangeNotFoundException(stockExchangeSymbol));
+        return getSecurityWithStockExchange(stockExchangeSymbol, securitySymbol);
     }
 
     private JSONObject buildSecurityJSON(Security security, UriBuilder uriBuilder) {
@@ -109,5 +107,29 @@ public class SecuritiesResource {
         } catch (IncompleteDataHistoryException e) {
             throw new BadRequestException(e);
         }
+    }
+
+    @Path("/{security-symbol}/division/")
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON_VALUE)
+    @Produces(MediaType.APPLICATION_JSON_VALUE)
+    public Response create(@PathParam("stock-exchange-symbol") String stockExchangeSymbol,
+                           @PathParam("security-symbol") String securitySymbol,
+                           Division division) {
+        log.debug("REST request to create close rates division for security '{}' in stock exchange '{}'",
+                  securitySymbol, stockExchangeSymbol);
+        SecurityWithStockExchange security = getSecurityWithStockExchange(stockExchangeSymbol, securitySymbol);
+        try {
+            return Response.status(Response.Status.CREATED)
+                           .entity(stockExchService.addDivision(security, division))
+                           .build();
+        } catch (DivisionAlreadyExistsException e) {
+            throw new BadRequestException("Should not add a division that already exists");
+        }
+    }
+
+    private SecurityWithStockExchange getSecurityWithStockExchange(String stockExchangeSymbol, String securitySymbol) {
+        return stockExchService.getSecurity(stockExchangeSymbol, securitySymbol)
+                               .orElseThrow(() -> new SecurityNotFoundException(stockExchangeSymbol, securitySymbol));
     }
 }

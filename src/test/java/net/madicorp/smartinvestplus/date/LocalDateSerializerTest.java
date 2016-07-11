@@ -3,8 +3,10 @@ package net.madicorp.smartinvestplus.date;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import net.madicorp.smartinvestplus.test.JsonAssertion;
+import org.assertj.core.api.Assertions;
 import org.junit.Test;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.time.LocalDate;
@@ -23,26 +25,14 @@ public class LocalDateSerializerTest {
     public void should_serialize_local_date_to_bson_date_time() throws Exception {
         // GIVEN
         LocalDate july_8_2016 = LocalDate.of(2016, Month.JULY, 8);
-        String expectedDateValue = july_8_2016.atStartOfDay().format(DateTimeFormatter.ISO_DATE_TIME);
         ObjectMapper objectMapper = objectMapper(subject);
 
         // WHEN
-        String actual = serialize(july_8_2016, objectMapper);
+        String actual = objectMapper.writeValueAsString(july_8_2016);
 
         // THEN
-        JsonAssertion.assertThat(actual).contains("$.$date", expectedDateValue);
-    }
-
-    @Test
-    public void should_serialize_null_value_as_null() throws Exception {
-        // GIVEN
-        ObjectMapper objectMapper = objectMapper(subject);
-
-        // WHEN
-        String actual = serialize(null, objectMapper);
-
-        // THEN
-        JsonAssertion.assertThat(actual).isNullValue();
+        Assertions.assertThat(actual)
+                  .isEqualTo("\"SVNPREFURSgiMjAxNi0wNy0wOFQwMDowMDowMCIp\"");
     }
 
     private static ObjectMapper objectMapper(LocalDateSerializer subject) {
@@ -51,12 +41,6 @@ public class LocalDateSerializerTest {
         localDateModule.addSerializer(LocalDate.class, subject);
         objectMapper.registerModule(localDateModule);
         return objectMapper;
-    }
-
-    private String serialize(LocalDate july_8_2016, ObjectMapper objectMapper) throws IOException {
-        StringWriter actualContainer = new StringWriter();
-        objectMapper.writeValue(actualContainer, july_8_2016);
-        return actualContainer.toString();
     }
 
 }

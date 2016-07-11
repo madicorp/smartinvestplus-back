@@ -18,6 +18,7 @@ public class CloseRateIterator implements Iterator<CloseRate>, Iterable<CloseRat
     // TODO rename should express the fact that it gets the closest close rate in the past outside current interval
     private final PreviousCloseRateProvider previousCloseRateProvider;
     private final CloseRateProvider closeRateProvider;
+    private final CloseRateAdjuster adjuster;
     private LocalDate currentDate;
     private CloseRate currentExistingCloseRate;
     private CloseRate previousCloseRate;
@@ -26,13 +27,14 @@ public class CloseRateIterator implements Iterator<CloseRate>, Iterable<CloseRat
     CloseRateIterator(LocalDate startDate, LocalDate endDate,
                       Iterator<CloseRate> existingCloseRateIterator,
                       NextDayProvider nextDayProvider, PreviousCloseRateProvider previousCloseRateProvider,
-                      CloseRateProvider closeRateProvider) {
+                      CloseRateProvider closeRateProvider, CloseRateAdjuster adjuster) {
         this.endDate = endDate;
         this.existingCloseRateIterator = existingCloseRateIterator;
         this.nextDayProvider = nextDayProvider;
         this.previousCloseRateProvider = previousCloseRateProvider;
         this.currentDate = startDate;
         this.closeRateProvider = closeRateProvider;
+        this.adjuster = adjuster;
     }
 
     @Override
@@ -59,11 +61,11 @@ public class CloseRateIterator implements Iterator<CloseRate>, Iterable<CloseRat
             existingCloseRateYielded = true;
             previousCloseRate = merge(closeRateProvider.get(), currentExistingCloseRate);
             currentDate = nextDayProvider.apply(currentDate);
-            return currentExistingCloseRate;
+            return adjuster.adjust(currentExistingCloseRate);
         }
         // Generating one because we have none for this date
         existingCloseRateYielded = false;
-        return generateCloseRate();
+        return adjuster.adjust(generateCloseRate());
     }
 
     private boolean mustYieldExistingCloseRate() {

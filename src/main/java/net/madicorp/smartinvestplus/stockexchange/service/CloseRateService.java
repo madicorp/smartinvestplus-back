@@ -1,7 +1,9 @@
 package net.madicorp.smartinvestplus.stockexchange.service;
 
+import com.google.common.collect.Maps;
 import net.madicorp.smartinvestplus.date.DateService;
 import net.madicorp.smartinvestplus.stockexchange.domain.CloseRate;
+import net.madicorp.smartinvestplus.stockexchange.domain.Division;
 import net.madicorp.smartinvestplus.stockexchange.domain.SecurityWithStockExchange;
 import net.madicorp.smartinvestplus.stockexchange.repository.CloseRateRepository;
 import net.madicorp.smartinvestplus.stockexchange.repository.StockExchangeRepository;
@@ -13,6 +15,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Iterator;
 import java.util.Spliterator;
 import java.util.Spliterators;
+import java.util.TreeMap;
 import java.util.stream.StreamSupport;
 
 /**
@@ -32,13 +35,23 @@ public class CloseRateService {
     public Iterator<CloseRate> getOneMonthToDateCloseRates(String stockExchangeSymbol, String securitySymbol,
                                                            LocalDate to) {
         SecurityWithStockExchange security = stockExchangeRepository.findSecurity(stockExchangeSymbol, securitySymbol);
+        TreeMap<LocalDate, Division> sortedDivisions = getSortedDivisions(to, security);
         Iterator<CloseRate> existingOneMonthToDateCloseRates =
             closeRateRepository.findOneMonthToDateCloseRates(stockExchangeSymbol, securitySymbol, to);
         return new CloseRateIterator(to.minusMonths(1), to,
                                      existingOneMonthToDateCloseRates,
                                      (date) -> dateService.nextOpenDay(date),
                                      (date) -> getClosestCloseRateInPast(stockExchangeSymbol, securitySymbol, date),
-                                     () -> closeRate(security));
+                                     () -> closeRate(security),
+                                     new CloseRateDivisionAdjuster(sortedDivisions));
+    }
+
+    private TreeMap<LocalDate, Division> getSortedDivisions(LocalDate to, SecurityWithStockExchange security) {
+        TreeMap<LocalDate, Division> sortedDivisions = Maps.newTreeMap();
+        for (Division division : stockExchangeRepository.getDivisions(security, to)) {
+            sortedDivisions.put(division.getDate(), division);
+        }
+        return sortedDivisions;
     }
 
     public void saveGenerated(String stockExchangeSymbol, String securitySymbol, Iterator<CloseRate> closeRates) {

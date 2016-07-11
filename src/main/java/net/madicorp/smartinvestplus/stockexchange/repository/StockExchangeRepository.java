@@ -1,6 +1,9 @@
 package net.madicorp.smartinvestplus.stockexchange.repository;
 
+import net.madicorp.smartinvestplus.stockexchange.domain.Division;
 import net.madicorp.smartinvestplus.stockexchange.domain.SecurityWithStockExchange;
+
+import java.time.LocalDate;
 
 /**
  * User: sennen
@@ -9,4 +12,8 @@ import net.madicorp.smartinvestplus.stockexchange.domain.SecurityWithStockExchan
  */
 public interface StockExchangeRepository {
     SecurityWithStockExchange findSecurity(String stockExchangeSymbol, String securitySymbol);
+
+    void addDivision(SecurityWithStockExchange security, Division division);
+
+    Iterable<Division> getDivisions(SecurityWithStockExchange security, LocalDate to);
 }

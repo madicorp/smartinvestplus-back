@@ -17,12 +17,7 @@ public class LocalDateSerializer extends JsonSerializer<LocalDate> {
     @Override
     public void serialize(LocalDate value, JsonGenerator gen,
                           SerializerProvider serializers) throws IOException {
-        if (value == null) {
-            gen.writeNull();
-        } else {
-            gen.writeStartObject();
-            gen.writeStringField("$date", value.atStartOfDay().format(DateTimeFormatter.ISO_DATE_TIME));
-            gen.writeEndObject();
-        }
+        String dateLiteral = "ISODATE(\"" + value.atStartOfDay().format(DateTimeFormatter.ISO_DATE_TIME) + "\")";
+        gen.writeBinary(dateLiteral.getBytes("UTF-8"));
     }
 }

@@ -1,5 +1,6 @@
 package net.madicorp.smartinvestplus.stockexchange.service;
 
+import net.madicorp.smartinvestplus.stockexchange.domain.Division;
 import net.madicorp.smartinvestplus.stockexchange.domain.SecurityWithStockExchange;
 import net.madicorp.smartinvestplus.stockexchange.domain.StockExchangeWithSecurities;
 import net.madicorp.smartinvestplus.stockexchange.repository.StockExchangeCRUDRepository;
@@ -33,5 +34,14 @@ public class StockExchangeService {
 
     private static <T> Optional<T> optional(T value) {
         return value != null ? Optional.of(value) : Optional.empty();
+    }
+
+    public SecurityWithStockExchange addDivision(SecurityWithStockExchange security, Division division) {
+        if(security.getDivisions().contains(division)) {
+            throw new DivisionAlreadyExistsException();
+        }
+        security.addDivision(division);
+        repository.addDivision(security, division);
+        return security;
     }
 }

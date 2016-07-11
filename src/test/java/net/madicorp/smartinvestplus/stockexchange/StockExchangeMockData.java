@@ -1,9 +1,6 @@
 package net.madicorp.smartinvestplus.stockexchange;
 
-import net.madicorp.smartinvestplus.stockexchange.domain.CloseRate;
-import net.madicorp.smartinvestplus.stockexchange.domain.Security;
-import net.madicorp.smartinvestplus.stockexchange.domain.SecurityWithStockExchange;
-import net.madicorp.smartinvestplus.stockexchange.domain.StockExchangeWithSecurities;
+import net.madicorp.smartinvestplus.stockexchange.domain.*;
 
 import java.time.LocalDate;
 
@@ -17,21 +14,25 @@ public class StockExchangeMockData {
         StockExchangeWithSecurities stockExchange = new StockExchangeWithSecurities();
         stockExchange.setSymbol("BRVM");
         stockExchange.setName("Bourse Régionale des VM");
-        stockExchange.getSecurities().add(security(1));
-        stockExchange.getSecurities().add(security(2));
+        stockExchange.getSecurities().add(smplSecurity(1));
+        stockExchange.getSecurities().add(smplSecurity(2));
         return stockExchange;
     }
 
     public static SecurityWithStockExchange security() {
+        return security(1);
+    }
+
+    public static SecurityWithStockExchange security(int idx) {
         SecurityWithStockExchange security = new SecurityWithStockExchange();
         security.getStockExchange().setSymbol("BRVM");
         security.getStockExchange().setName("Bourse Régionale des VM");
-        security.setName("Security 1");
-        security.setSymbol("sec_1");
+        security.setName("Security " + idx);
+        security.setSymbol("sec_" + idx);
         return security;
     }
 
-    private static Security security(int idx) {
+    private static Security smplSecurity(int idx) {
         Security security = new Security();
         security.setName("Security " + idx);
         security.setSymbol("sec_" + idx);
@@ -48,5 +49,12 @@ public class StockExchangeMockData {
         closeRate.setRate(rate);
         closeRate.setGenerated(generated);
         return closeRate;
+    }
+
+    public static Division division(LocalDate date, double rate) {
+        Division division = new Division();
+        division.setDate(date);
+        division.setRate(rate);
+        return division;
     }
 }
