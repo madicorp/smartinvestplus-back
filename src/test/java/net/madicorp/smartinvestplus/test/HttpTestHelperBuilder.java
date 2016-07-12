@@ -4,6 +4,7 @@ import net.madicorp.smartinvestplus.config.JerseyConfig;
 import net.madicorp.smartinvestplus.config.JerseyMapperProvider;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.TestProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 

@@ -15,6 +15,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.time.LocalDate;
+import java.time.Month;
 
 import static com.lordofthejars.nosqlunit.mongodb.MongoDbConfigurationBuilder.mongoDb;
 import static net.madicorp.smartinvestplus.stockexchange.StockExchangeMockData.division;
@@ -106,10 +107,23 @@ public class JongoStockExchangeRepositoryTest {
 
         // WHEN
         Iterable<Division> actual =
-            subject.getDivisions(security.getStockExchange().getSymbol(), security.getSymbol(), LocalDate.of(2016, 7, 9));
+            subject
+                .getDivisions(security.getStockExchange().getSymbol(), security.getSymbol(), LocalDate.of(2016, 7, 9));
 
         // THEN
         Assertions.assertThat(actual)
                   .containsOnly(division(LocalDate.of(2016, 7, 9), .8), division(LocalDate.of(2016, 7, 8), .6));
+    }
+
+    @Test
+    public void should_add_holiday() throws Exception {
+        // GIVEN
+        LocalDate july62016 = LocalDate.of(2016, Month.JULY, 6);
+
+        // WHEN
+        subject.addHoliday("BRVM", july62016);
+
+        // THEN;
+        Assertions.assertThat(subject.getHolidays("BRVM")).containsOnly(july62016);
     }
 }

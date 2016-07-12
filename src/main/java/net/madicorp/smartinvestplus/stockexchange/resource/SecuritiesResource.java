@@ -21,6 +21,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Iterator;
 
 @Component
@@ -109,15 +110,16 @@ public class SecuritiesResource {
         }
     }
 
-    @Path("/{security-symbol}/division/")
-    @POST
+    @Path("/{security-symbol}/divisions/")
+    @PUT
     @Consumes(MediaType.APPLICATION_JSON_VALUE)
     @Produces(MediaType.APPLICATION_JSON_VALUE)
     public Response create(@PathParam("stock-exchange-symbol") String stockExchangeSymbol,
                            @PathParam("security-symbol") String securitySymbol,
                            Division division) {
-        log.debug("REST request to create close rates division for security '{}' in stock exchange '{}'",
-                  securitySymbol, stockExchangeSymbol);
+        log.debug("REST request to create close rates division for security '{}' in stock exchange '{}' at '{}' to apply {} rate",
+                  securitySymbol, stockExchangeSymbol, division.getDate().format(DateTimeFormatter.ISO_DATE),
+                  division.getRate());
         SecurityWithStockExchange security = getSecurityWithStockExchange(stockExchangeSymbol, securitySymbol);
         try {
             return Response.status(Response.Status.CREATED)

@@ -33,7 +33,17 @@ public class ResponseAssertion extends AbstractAssert<ResponseAssertion, Respons
         return statusEquals(404);
     }
 
-    public ResponseAssertion statusEquals(int statusCode) {
+    public ResponseAssertion created() {
+        isNotNull();
+        return statusEquals(201);
+    }
+
+    public ResponseAssertion badRequest() {
+        isNotNull();
+        return statusEquals(400);
+    }
+
+    private ResponseAssertion statusEquals(int statusCode) {
         isNotNull();
         Assertions.assertThat(actual.getStatus()).isEqualTo(statusCode);
         return this;

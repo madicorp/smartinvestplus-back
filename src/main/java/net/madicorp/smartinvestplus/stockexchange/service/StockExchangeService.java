@@ -1,5 +1,6 @@
 package net.madicorp.smartinvestplus.stockexchange.service;
 
+import net.madicorp.smartinvestplus.date.StockExchangeHoliday;
 import net.madicorp.smartinvestplus.stockexchange.domain.Division;
 import net.madicorp.smartinvestplus.stockexchange.domain.SecurityWithStockExchange;
 import net.madicorp.smartinvestplus.stockexchange.domain.StockExchangeWithSecurities;
@@ -8,6 +9,7 @@ import net.madicorp.smartinvestplus.stockexchange.repository.StockExchangeReposi
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
+import java.time.LocalDate;
 import java.util.Optional;
 
 /**
@@ -19,6 +21,7 @@ import java.util.Optional;
 public class StockExchangeService {
     @Inject
     private StockExchangeCRUDRepository crudRepository;
+
     @Inject
     private StockExchangeRepository repository;
 
@@ -36,12 +39,20 @@ public class StockExchangeService {
         return value != null ? Optional.of(value) : Optional.empty();
     }
 
-    public SecurityWithStockExchange addDivision(SecurityWithStockExchange security, Division division) {
+    public Division addDivision(SecurityWithStockExchange security, Division division) {
         if(security.getDivisions().contains(division)) {
             throw new DivisionAlreadyExistsException();
         }
         security.addDivision(division);
         repository.addDivision(security.getStockExchange().getSymbol(), security.getSymbol(), division);
-        return security;
+        return division;
+    }
+
+    public Optional<StockExchangeHoliday> addHoliday(String stockExchangeSymbol, LocalDate holiday) {
+        repository.addHoliday(stockExchangeSymbol, holiday);
+        StockExchangeHoliday stockExchangeHoliday = new StockExchangeHoliday();
+        stockExchangeHoliday.setStockExchangeSymbol(stockExchangeSymbol);
+        stockExchangeHoliday.setDate(holiday);
+        return Optional.of(stockExchangeHoliday);
     }
 }

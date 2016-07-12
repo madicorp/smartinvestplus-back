@@ -5,7 +5,7 @@ import org.junit.Test;
 
 import java.time.LocalDate;
 import java.time.Month;
-import java.util.TreeSet;
+import java.util.Collections;
 
 /**
  * User: sennen
@@ -22,26 +22,23 @@ public class DateServiceTest {
         LocalDate february29 = LocalDate.of(2016, Month.FEBRUARY, 29);
 
         // WHEN
-        LocalDate actual = subject.nextOpenDay(february26);
+        LocalDate actual = subject.nextOpenDay(february26, Collections.emptySet());
 
         // THEN
         Assertions.assertThat(actual).isEqualTo(february29);
     }
 
     @Test
-    public void should_return_FEB_24_as_previous_day_for_FEB_29_and_set_containing_FEB_23_24_and_MAR_3() throws Exception {
+    public void should_return_MAR_1_as_next_open_day_for_FEB_26_if_FEB_29_is_holiday() throws Exception {
         // GIVEN
-        TreeSet<LocalDate> dates = new TreeSet<>();
-        LocalDate february26 = LocalDate.of(2016, Month.FEBRUARY, 24);
-        dates.add(LocalDate.of(2016, Month.FEBRUARY, 23));
-        dates.add(february26);
-        dates.add(LocalDate.of(2016, Month.MARCH, 3));
+        LocalDate february26 = LocalDate.of(2016, Month.FEBRUARY, 26);
+        LocalDate february29 = LocalDate.of(2016, Month.FEBRUARY, 29);
 
         // WHEN
-        LocalDate actual = subject.previousDayIn(dates, LocalDate.of(2016, Month.FEBRUARY, 29));
+        LocalDate actual =
+            subject.nextOpenDay(february26, Collections.singleton(february29));
 
         // THEN
-        Assertions.assertThat(actual).isEqualTo(february26);
+        Assertions.assertThat(actual).isEqualTo(LocalDate.of(2016, Month.MARCH, 1));
     }
-
 }

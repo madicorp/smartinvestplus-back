@@ -1,12 +1,19 @@
 package net.madicorp.smartinvestplus.stockexchange.repository;
 
+import net.madicorp.smartinvestplus.date.StockExchangeHoliday;
 import net.madicorp.smartinvestplus.stockexchange.domain.Division;
 import net.madicorp.smartinvestplus.stockexchange.domain.SecurityWithStockExchange;
+import org.jongo.Aggregate;
 import org.jongo.Jongo;
 import org.springframework.stereotype.Repository;
 
 import javax.inject.Inject;
 import java.time.LocalDate;
+import java.util.Set;
+import java.util.Spliterator;
+import java.util.Spliterators;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 /**
  * User: sennen
@@ -95,5 +102,51 @@ public class JongoStockExchangeRepository implements StockExchangeRepository {
                          "   }" +
                          "}")
                     .as(Division.class);
+    }
+
+    @Override
+    public void addHoliday(String stockExchangeSymbol, LocalDate holiday) {
+        jongo.getCollection("stock_exchange")
+             .update(
+                 "{" +
+                 "   '_id': #" +
+                 "}",
+                 stockExchangeSymbol
+             )
+             .upsert()
+             .with(
+                 "{" +
+                 "  '$push': {" +
+                 "      'holidays': #" +
+                 "  }" +
+                 "}",
+                 holiday
+             );
+    }
+
+    @Override
+    public Set<LocalDate> getHolidays(String stockExchangeSymbol) {
+        Aggregate.ResultsIterator<StockExchangeHoliday> holidays =
+            jongo.getCollection("stock_exchange")
+                 .aggregate("{" +
+                            "    '$match': {" +
+                            "        '_id': #" +
+                            "    }" +
+                            "}",
+                            stockExchangeSymbol)
+                 .and("{" +
+                      " '$unwind': '$holidays'" +
+                      "}")
+                 .and("{" +
+                      " '$project': {" +
+                      "     '_id': 0," +
+                      "     'stock_exchange': '$_id'," +
+                      "     'date': '$holidays'" +
+                      " }" +
+                      "}")
+                 .as(StockExchangeHoliday.class);
+        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(holidays, Spliterator.ORDERED), true)
+                            .map(StockExchangeHoliday::getDate)
+                            .collect(Collectors.toSet());
     }
 }

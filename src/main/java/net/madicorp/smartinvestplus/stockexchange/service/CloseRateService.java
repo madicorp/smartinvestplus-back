@@ -12,10 +12,7 @@ import org.springframework.stereotype.Service;
 import javax.inject.Inject;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Iterator;
-import java.util.Spliterator;
-import java.util.Spliterators;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.stream.StreamSupport;
 
 /**
@@ -27,8 +24,10 @@ import java.util.stream.StreamSupport;
 public class CloseRateService {
     @Inject
     private StockExchangeRepository stockExchangeRepository;
+
     @Inject
     private CloseRateRepository closeRateRepository;
+
     @Inject
     private DateService dateService;
 
@@ -37,9 +36,10 @@ public class CloseRateService {
         TreeMap<LocalDate, Division> sortedDivisions = getSortedDivisions(stockExchangeSymbol, securitySymbol, to);
         Iterator<CloseRate> existingOneMonthToDateCloseRates =
             closeRateRepository.findOneMonthToDateCloseRates(stockExchangeSymbol, securitySymbol, to);
+        Set<LocalDate> holidays = stockExchangeRepository.getHolidays(stockExchangeSymbol);
         return new CloseRateIterator(to.minusMonths(1), to,
                                      existingOneMonthToDateCloseRates,
-                                     (date) -> dateService.nextOpenDay(date),
+                                     (date) -> dateService.nextOpenDay(date, holidays),
                                      (date) -> getClosestCloseRateInPast(stockExchangeSymbol, securitySymbol, date),
                                      () -> closeRate(stockExchangeSymbol, securitySymbol),
                                      new CloseRateDivisionAdjuster(sortedDivisions));
