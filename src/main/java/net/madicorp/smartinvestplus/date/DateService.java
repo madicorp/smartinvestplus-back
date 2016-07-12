@@ -4,7 +4,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.util.SortedSet;
+import java.util.Set;
 
 /**
  * User: sennen
@@ -13,18 +13,13 @@ import java.util.SortedSet;
  */
 @Service
 public class DateService {
-    public LocalDate previousDayIn(SortedSet<LocalDate> dates, LocalDate date) {
-        return dates.headSet(date).last();
-    }
-
-    public LocalDate nextOpenDay(LocalDate date) {
-        int daysToAdd = 1;
-        if (DayOfWeek.FRIDAY.equals(date.getDayOfWeek())) {
-            daysToAdd = 3;
+    public LocalDate nextOpenDay(LocalDate date, Set<LocalDate> holidays) {
+        date = date.plusDays(1);
+        while(holidays.contains(date) ||
+              DayOfWeek.SATURDAY.equals(date.getDayOfWeek()) ||
+              DayOfWeek.SUNDAY.equals(date.getDayOfWeek())) {
+            date = date.plusDays(1);
         }
-        if (DayOfWeek.SATURDAY.equals(date.getDayOfWeek())) {
-            daysToAdd = 2;
-        }
-        return date.plusDays(daysToAdd);
+        return date;
     }
 }

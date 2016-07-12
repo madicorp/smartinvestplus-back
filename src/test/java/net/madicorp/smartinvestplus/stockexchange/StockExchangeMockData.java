@@ -1,5 +1,6 @@
 package net.madicorp.smartinvestplus.stockexchange;
 
+import net.madicorp.smartinvestplus.date.StockExchangeHoliday;
 import net.madicorp.smartinvestplus.stockexchange.domain.*;
 
 import java.time.LocalDate;
@@ -59,5 +60,12 @@ public class StockExchangeMockData {
         division.setDate(date);
         division.setRate(rate);
         return division;
+    }
+
+    public static StockExchangeHoliday holiday(LocalDate date) {
+        StockExchangeHoliday holiday = new StockExchangeHoliday();
+        holiday.setStockExchangeSymbol("BRVM");
+        holiday.setDate(date);
+        return holiday;
     }
 }

@@ -1,12 +1,13 @@
 package net.madicorp.smartinvestplus.date;
 
+import net.madicorp.smartinvestplus.stockexchange.resource.StockExchangeNotFoundException;
+import net.madicorp.smartinvestplus.stockexchange.service.StockExchangeService;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.inject.Inject;
+import javax.ws.rs.*;
+import java.time.LocalDate;
 
 /**
  * User: sennen
@@ -14,12 +15,18 @@ import javax.ws.rs.Produces;
  * Time: 20:24
  */
 @Component
-@Path("/api/holidays/")
+@Path("/api/{stock-exchange-symbol}/holidays/")
 public class HolidaysResource {
-    @POST
+
+    @Inject
+    private StockExchangeService stockExchService;
+
+    @PUT
     @Consumes(MediaType.APPLICATION_JSON_VALUE)
     @Produces(MediaType.APPLICATION_JSON_VALUE)
-    public void createHoliday() {
-
+    public StockExchangeHoliday createHoliday(@PathParam("stock-exchange-symbol") String stockExchangeSymbol,
+                                              LocalDate holiday) {
+        return stockExchService.addHoliday(stockExchangeSymbol, holiday)
+                               .orElseThrow(() -> new StockExchangeNotFoundException(stockExchangeSymbol));
     }
 }
