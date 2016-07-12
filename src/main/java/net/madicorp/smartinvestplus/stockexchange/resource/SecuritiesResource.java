@@ -102,7 +102,7 @@ public class SecuritiesResource {
         try {
             Iterator<CloseRate> oneMonthToDateCloseRates =
                 closeRateService.getOneMonthToDateCloseRates(stockExchangeSymbol, securitySymbol, LocalDate.now());
-            closeRateService.saveGenerated(stockExchangeSymbol, securitySymbol, oneMonthToDateCloseRates);
+            closeRateService.saveGenerated(oneMonthToDateCloseRates);
             return oneMonthToDateCloseRates;
         } catch (IncompleteDataHistoryException e) {
             throw new BadRequestException(e);

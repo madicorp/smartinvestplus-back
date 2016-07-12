@@ -45,15 +45,15 @@ public class JongoStockExchangeRepository implements StockExchangeRepository {
     }
 
     @Override
-    public void addDivision(SecurityWithStockExchange security, Division division) {
+    public void addDivision(String stockExchangeSymbol, String securitySymbol, Division division) {
         jongo.getCollection("stock_exchange")
              .update(
                  "{" +
                  "   '_id': #," +
                  "   'securities._id': #" +
                  "}",
-                 security.getStockExchange().getSymbol(),
-                 security.getSymbol()
+                 stockExchangeSymbol,
+                 securitySymbol
              )
              .upsert()
              .with(
@@ -67,7 +67,7 @@ public class JongoStockExchangeRepository implements StockExchangeRepository {
     }
 
     @Override
-    public Iterable<Division> getDivisions(SecurityWithStockExchange security, LocalDate to) {
+    public Iterable<Division> getDivisions(String stockExchangeSymbol, String securitySymbol, LocalDate to) {
         return jongo.getCollection("stock_exchange")
                     .aggregate("{" +
                                "    $unwind: '$securities'" +
@@ -77,7 +77,7 @@ public class JongoStockExchangeRepository implements StockExchangeRepository {
                          "       'securities._id': #," +
                          "       '_id': #" +
                          "   }" +
-                         "}", security.getSymbol(), security.getStockExchange().getSymbol())
+                         "}", securitySymbol, stockExchangeSymbol)
                     .and("{" +
                          "    $unwind: '$securities.divisions'" +
                          "}")

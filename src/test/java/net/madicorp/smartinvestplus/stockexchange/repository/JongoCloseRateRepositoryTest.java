@@ -40,9 +40,8 @@ public class JongoCloseRateRepositoryTest {
     @Autowired
     private Jongo jongo;
 
-    @Before
-    public void insertCloseRates() throws Exception {
-        jongo.getCollection("brvm_sec_1_close_rates")
+    private void insertCloseRates() throws Exception {
+        jongo.getCollection("close_rates")
              .insert(
                  closeRate(LocalDate.of(2016, Month.JANUARY, 23), 990),
                  closeRate(LocalDate.of(2016, Month.FEBRUARY, 23), 1000),
@@ -53,9 +52,15 @@ public class JongoCloseRateRepositoryTest {
              );
     }
 
+    @Before
+    public void resetCloseRates() throws Exception {
+        jongo.getCollection("close_rates").remove().wasAcknowledged();
+    }
+
     @Test
     public void should_return_close_rates_of_sec_1_for_one_month() throws Exception {
         // GIVEN
+        insertCloseRates();
         LocalDate to = LocalDate.of(2016, Month.MARCH, 26);
 
         // WHEN
@@ -74,6 +79,7 @@ public class JongoCloseRateRepositoryTest {
     @Test
     public void should_return_feb_23_as_closest_rate_for_feb_25() throws Exception {
         // GIVEN
+        insertCloseRates();
         LocalDate feb25 = LocalDate.of(2016, Month.FEBRUARY, 25);
 
         // WHEN
@@ -86,6 +92,7 @@ public class JongoCloseRateRepositoryTest {
     @Test
     public void should_return_empty_optional_as_closest_date_if_no_close_rate_in_past() throws Exception {
         // GIVEN
+        insertCloseRates();
         LocalDate jan1 = LocalDate.of(2016, Month.JANUARY, 1);
 
         // WHEN
@@ -107,10 +114,10 @@ public class JongoCloseRateRepositoryTest {
         };
 
         // WHEN
-        subject.save("BRVM", "sec_2", closeRates);
+        subject.save(closeRates);
 
         // THEN
-        MongoCursor<CloseRate> actual = jongo.getCollection("brvm_sec_2_close_rates")
+        MongoCursor<CloseRate> actual = jongo.getCollection("close_rates")
                                              .find()
                                              .as(CloseRate.class);
         Assertions.assertThat((Iterator<CloseRate>) actual).containsOnly(closeRates);

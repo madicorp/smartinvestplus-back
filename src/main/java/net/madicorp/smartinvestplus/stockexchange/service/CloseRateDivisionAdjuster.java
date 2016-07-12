@@ -22,14 +22,18 @@ public class CloseRateDivisionAdjuster implements CloseRateAdjuster {
         CloseRate adjustedCloseRate = new CloseRate();
         LocalDate closeDate = closeRate.getDate();
         adjustedCloseRate.setDate(closeDate);
-        adjustedCloseRate.setSecurity(closeRate.getSecurity());
+        adjustedCloseRate.setStockExchangeSymbol(closeRate.getStockExchangeSymbol());
+        adjustedCloseRate.setSecuritySymbol(closeRate.getSecuritySymbol());
         adjustedCloseRate.setGenerated(closeRate.isGenerated());
         adjustedCloseRate.setRate(closeRate.getRate());
         divisions.headMap(closeDate)
                  .values()
-                 .parallelStream()
+                 .stream()
                  .map(Division::getRate)
-                 .forEach(rate -> adjustedCloseRate.setRate(adjustedCloseRate.getRate() * rate));
+                 .forEach(rate -> {
+                     System.out.println(adjustedCloseRate.getRate() + " : " + rate);
+                     adjustedCloseRate.setRate(adjustedCloseRate.getRate() * rate);
+                 });
         return adjustedCloseRate;
     }
 }

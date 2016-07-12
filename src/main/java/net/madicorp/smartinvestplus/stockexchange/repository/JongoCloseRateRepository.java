@@ -18,31 +18,40 @@ import java.util.Optional;
  */
 @Repository
 public class JongoCloseRateRepository implements CloseRateRepository {
-    @Inject
+    private static final String CLOSE_RATES = "close_rates";
     private Jongo jongo;
+
+    @Inject
+    public JongoCloseRateRepository(Jongo jongo) {
+        this.jongo = jongo;
+    }
 
     @Override
     public Iterator<CloseRate> findOneMonthToDateCloseRates(String stockExchangeSymbol, String securitySymbol,
                                                             LocalDate to) {
         LocalDate oneMonthEarlier = to.minusMonths(1);
-        MongoCollection closeRates = jongo.getCollection(closeRatesCollection(stockExchangeSymbol, securitySymbol));
+        MongoCollection closeRates = jongo.getCollection(CLOSE_RATES);
         return closeRates.find("{" +
+                               "   stock_exchange: #," +
+                               "   security: #," +
                                "   date: {" +
                                "       '$gte': #," +
                                "       '$lte': #" +
                                "   }" +
-                               "}", oneMonthEarlier, to).as(CloseRate.class);
+                               "}", stockExchangeSymbol, securitySymbol, oneMonthEarlier, to).as(CloseRate.class);
     }
 
     @Override
     public Optional<CloseRate> findClosestCloseRateInPast(String stockExchangeSymbol, String securitySymbol,
                                                           LocalDate date) {
-        MongoCollection closeRates = jongo.getCollection(closeRatesCollection(stockExchangeSymbol, securitySymbol));
+        MongoCollection closeRates = jongo.getCollection(CLOSE_RATES);
         MongoCursor<CloseRate> closestCloseRateInPast = closeRates.find("{" +
+                                                                        "   stock_exchange: #," +
+                                                                        "   security: #," +
                                                                         "   date: {" +
                                                                         "       '$lte': #" +
                                                                         "   }" +
-                                                                        "}", date)
+                                                                        "}", stockExchangeSymbol, securitySymbol, date)
                                                                   .sort("{" +
                                                                         "    date: -1" +
                                                                         "}")
@@ -55,12 +64,8 @@ public class JongoCloseRateRepository implements CloseRateRepository {
     }
 
     @Override
-    public void save(String stockExchangeSymbol, String securitySymbol, CloseRate[] generatedCloseRates) {
-        MongoCollection closeRates = jongo.getCollection(closeRatesCollection(stockExchangeSymbol, securitySymbol));
+    public void save(CloseRate[] generatedCloseRates) {
+        MongoCollection closeRates = jongo.getCollection(CLOSE_RATES);
         closeRates.insert(generatedCloseRates);
-    }
-
-    private String closeRatesCollection(String stockExchangeSymbol, String securitySymbol) {
-        return (stockExchangeSymbol + "_" + securitySymbol).toLowerCase() + "_close_rates";
     }
 }

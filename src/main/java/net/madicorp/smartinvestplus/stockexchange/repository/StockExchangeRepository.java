@@ -13,7 +13,7 @@ import java.time.LocalDate;
 public interface StockExchangeRepository {
     SecurityWithStockExchange findSecurity(String stockExchangeSymbol, String securitySymbol);
 
-    void addDivision(SecurityWithStockExchange security, Division division);
+    void addDivision(String stockExchangeSymbol, String securitySymbol, Division division);
 
-    Iterable<Division> getDivisions(SecurityWithStockExchange security, LocalDate to);
+    Iterable<Division> getDivisions(String stockExchangeSymbol, String securitySymbol, LocalDate to);
 }

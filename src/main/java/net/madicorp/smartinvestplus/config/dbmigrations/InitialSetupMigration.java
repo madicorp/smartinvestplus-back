@@ -1,12 +1,8 @@
 package net.madicorp.smartinvestplus.config.dbmigrations;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.databind.introspect.VisibilityChecker;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.github.mongobee.changeset.ChangeLog;
 import com.github.mongobee.changeset.ChangeSet;
 import com.mongodb.DB;
-import de.undercouch.bson4jackson.BsonModule;
 import net.madicorp.smartinvestplus.domain.Authority;
 import net.madicorp.smartinvestplus.domain.User;
 import net.madicorp.smartinvestplus.service.mustache.ListStringMustacheTemplate;
@@ -15,9 +11,7 @@ import net.madicorp.smartinvestplus.stockexchange.domain.CloseRate;
 import net.madicorp.smartinvestplus.stockexchange.domain.Security;
 import net.madicorp.smartinvestplus.stockexchange.domain.StockExchangeWithSecurities;
 import org.jongo.Jongo;
-import org.jongo.Mapper;
 import org.jongo.MongoCollection;
-import org.jongo.marshall.jackson.JacksonMapper;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
@@ -98,33 +92,37 @@ public class InitialSetupMigration {
         } catch (IOException e) {
             throw new MigrationException("Unexpected exception reading file", e);
         }
-        for (Resource closeRatesFile : closeRatesFiles) {
-            insertCloseRates(db, closeRatesFile);
-        }
+        Arrays.stream(closeRatesFiles)
+            .parallel()
+            .forEach(closeRatesFile -> insertCloseRates(db, closeRatesFile));
     }
 
     private void insertCloseRates(DB db, Resource closeRatesFile) {
         String closeRatesFileName = closeRatesFile.getFilename();
-        MongoCollection closingPricesCollection =
-            collection(db, closeRatesFileName.replace(".csv", "").toLowerCase() + "_close_rates");
-        closingPricesCollection.ensureIndex(mongoIndex("date"));
+        String[] stockExchangeAndSecurity = closeRatesFileName.replace(".csv", "").split("_");
+        String stockExchange = stockExchangeAndSecurity[0].toLowerCase(),
+            security = stockExchangeAndSecurity[1].toLowerCase();
+        MongoCollection closingRatesCollection = collection(db, "close_rates");
+        closingRatesCollection.ensureIndex(mongoIndex("stock_exchange", "security", "date"));
         try (BufferedReader reader = new BufferedReader(new FileReader(closeRatesFile.getFile()))) {
             CloseRate[] closeRates = reader.lines()
                                            // Skip header
                                            .skip(1)
-                                           .map(this::parseClosingPrice)
+                                           .map(line -> parseCloseRate(stockExchange, security, line))
                                            .toArray(CloseRate[]::new);
-            closingPricesCollection.insert(closeRates);
+            closingRatesCollection.insert(closeRates);
         } catch (IOException e) {
             throw new MigrationException("Unexpected exception reading file", e);
         }
     }
 
-    private CloseRate parseClosingPrice(String line) {
+    private static CloseRate parseCloseRate(String stockExchange, String security, String line) {
         String[] data = line.split(";");
         LocalDate date = LocalDate.parse(data[0], DateTimeFormatter.ofPattern("uuuu/MM/dd"));
         Double rate = new Double(data[1]);
         CloseRate closeRate = new CloseRate();
+        closeRate.setStockExchangeSymbol(stockExchange);
+        closeRate.setSecuritySymbol(security);
         closeRate.setDate(date);
         closeRate.setRate(rate);
         return closeRate;

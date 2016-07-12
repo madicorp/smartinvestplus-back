@@ -13,7 +13,8 @@ import java.util.Optional;
  */
 public interface CloseRateRepository {
     Iterator<CloseRate> findOneMonthToDateCloseRates(String stockExchangeSymbol, String securitySymbol, LocalDate to);
+
     Optional<CloseRate> findClosestCloseRateInPast(String stockExchangeSymbol, String securitySymbol, LocalDate date);
 
-    void save(String stockExchangeSymbol, String securitySymbol, CloseRate[] generatedCloseRates);
+    void save(CloseRate[] generatedCloseRates);
 }

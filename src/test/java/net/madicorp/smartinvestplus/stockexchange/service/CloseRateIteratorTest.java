@@ -11,7 +11,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import static net.madicorp.smartinvestplus.stockexchange.StockExchangeMockData.closeRate;
-import static org.mockito.Mockito.mock;
 
 /**
  * User: sennen
@@ -34,7 +33,8 @@ public class CloseRateIteratorTest {
         // WHEN
         CloseRateIterator actual = new CloseRateIterator(
             LocalDate.of(2016, Month.FEBRUARY, 8), LocalDate.of(2016, Month.FEBRUARY, 12),
-            existingCloseRates.iterator(), nextDayProvider, previousCloseRateProvider, CloseRate::new,
+            existingCloseRates.iterator(), nextDayProvider, previousCloseRateProvider,
+            () -> closeRate(LocalDate.now(), .0),
             closeRate -> {
                 closeRate.setRate(closeRate.getRate() / 2);
                 return closeRate;

@@ -1,6 +1,6 @@
 package net.madicorp.smartinvestplus.stockexchange.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,10 +16,12 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @ToString
-@EqualsAndHashCode(of={"security", "date", "rate", "generated"})
+@EqualsAndHashCode(of = {"stockExchangeSymbol", "securitySymbol", "date", "rate", "generated"})
 public class CloseRate {
-    @JsonIgnore
-    private SecurityWithStockExchange security;
+    @JsonProperty("stock_exchange")
+    private String stockExchangeSymbol;
+    @JsonProperty("security")
+    private String securitySymbol;
     private LocalDate date;
     private Double rate;
     private boolean generated;
