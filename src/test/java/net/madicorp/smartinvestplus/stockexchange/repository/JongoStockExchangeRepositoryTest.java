@@ -62,7 +62,7 @@ public class JongoStockExchangeRepositoryTest {
         Division division = division(LocalDate.of(2016, 7, 10), .7);
 
         // WHEN
-        subject.addDivision(security, division);
+        subject.addDivision(security.getStockExchange().getSymbol(), security.getSymbol(), division);
 
         // THEN
         SecurityWithStockExchange actualSecurity =
@@ -81,7 +81,7 @@ public class JongoStockExchangeRepositoryTest {
         Division division = division(LocalDate.of(2016, 7, 11), .8);
 
         // WHEN
-        subject.addDivision(security, division);
+        subject.addDivision(security.getStockExchange().getSymbol(), security.getSymbol(), division);
 
         // THEN
         SecurityWithStockExchange actualSecurity =
@@ -98,14 +98,15 @@ public class JongoStockExchangeRepositoryTest {
         // GIVEN
         SecurityWithStockExchange security = security(2);
         Division division = division(LocalDate.of(2016, 7, 9), .8);
-        subject.addDivision(security, division);
+        subject.addDivision(security.getStockExchange().getSymbol(), security.getSymbol(), division);
         division = division(LocalDate.of(2016, 7, 10), .7);
-        subject.addDivision(security, division);
+        subject.addDivision(security.getStockExchange().getSymbol(), security.getSymbol(), division);
         division = division(LocalDate.of(2016, 7, 8), .6);
-        subject.addDivision(security, division);
+        subject.addDivision(security.getStockExchange().getSymbol(), security.getSymbol(), division);
 
         // WHEN
-        Iterable<Division> actual = subject.getDivisions(security, LocalDate.of(2016, 7, 9));
+        Iterable<Division> actual =
+            subject.getDivisions(security.getStockExchange().getSymbol(), security.getSymbol(), LocalDate.of(2016, 7, 9));
 
         // THEN
         Assertions.assertThat(actual)

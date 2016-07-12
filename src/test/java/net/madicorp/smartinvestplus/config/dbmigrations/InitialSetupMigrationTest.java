@@ -94,19 +94,25 @@ public class InitialSetupMigrationTest {
 
         // THEN
         Jongo jongo = jongo();
-        MongoCollection airLiquideCiCloseRates = jongo.getCollection("brvm_sivc_close_rates");
-        LocalDate firstAirLiquideDate = airLiquideCiCloseRates.find()
-                                                                 .limit(1)
-                                                                 .as(CloseRate.class)
-                                                                 .next()
-                                                                 .getDate();
+        MongoCollection actual = jongo.getCollection("close_rates");
+        LocalDate firstAirLiquideDate = actual.find("{" +
+                                                    "   'stock_exchange': 'brvm'," +
+                                                    "   'security': 'sivc'" +
+                                                    "}")
+                                              .limit(1)
+                                              .as(CloseRate.class)
+                                              .next()
+                                              .getDate();
         Assertions.assertThat(firstAirLiquideDate).isEqualTo("2016-03-18");
-        LocalDate lastAirLiguideDate = airLiquideCiCloseRates.find()
-                                                                .sort("{_id:-1}")
-                                                                .limit(1)
-                                                                .as(CloseRate.class)
-                                                                .next()
-                                                                .getDate();
+        LocalDate lastAirLiguideDate = actual.find("{" +
+                                                   "   'stock_exchange': 'brvm'," +
+                                                   "   'security': 'sivc'" +
+                                                   "}")
+                                             .sort("{_id:-1}")
+                                             .limit(1)
+                                             .as(CloseRate.class)
+                                             .next()
+                                             .getDate();
         Assertions.assertThat(lastAirLiguideDate).isEqualTo("2008-08-01");
     }
 

@@ -41,7 +41,7 @@ public class StockExchangeService {
             throw new DivisionAlreadyExistsException();
         }
         security.addDivision(division);
-        repository.addDivision(security, division);
+        repository.addDivision(security.getStockExchange().getSymbol(), security.getSymbol(), division);
         return security;
     }
 }

@@ -45,6 +45,9 @@ public class StockExchangeMockData {
 
     public static CloseRate closeRate(LocalDate date, double rate, boolean generated) {
         CloseRate closeRate = new CloseRate();
+        SecurityWithStockExchange security = security(1);
+        closeRate.setSecuritySymbol(security.getSymbol());
+        closeRate.setStockExchangeSymbol(security.getStockExchange().getSymbol());
         closeRate.setDate(date);
         closeRate.setRate(rate);
         closeRate.setGenerated(generated);

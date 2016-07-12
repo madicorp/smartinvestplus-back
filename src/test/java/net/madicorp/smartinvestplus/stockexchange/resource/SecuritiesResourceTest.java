@@ -107,6 +107,6 @@ public class SecuritiesResourceTest {
                         LocalDate.of(2016, Month.FEBRUARY, 8).format(DateTimeFormatter.ISO_DATE))
               .contains("$[0].rate", 990.)
               .contains("$[0].generated", true);
-        verify(mockCloseRateService).saveGenerated("BRVM", "sec_1", closeRates);
+        verify(mockCloseRateService).saveGenerated(closeRates);
     }
 }

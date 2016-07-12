@@ -95,16 +95,18 @@ public class CloseRateIterator implements Iterator<CloseRate>, Iterable<CloseRat
         generatedCloseRate.setDate(currentDate);
         generatedCloseRate.setRate(provider.apply(currentDate).getRate());
         generatedCloseRate.setGenerated(true);
-        previousCloseRate = merge(closeRateProvider.get(), generatedCloseRate);
+        previousCloseRate = generatedCloseRate = merge(closeRateProvider.get(), generatedCloseRate);
         currentDate = nextDayProvider.apply(currentDate);
         return generatedCloseRate;
     }
 
-    private CloseRate merge(CloseRate closeRateWithSecurity, CloseRate closeRateWithDateAndRate) {
+    private CloseRate merge(CloseRate closeRateWithSecurity, CloseRate closeRateWithDateRateAndGenerationInfo) {
         CloseRate closeRate = new CloseRate();
-        closeRate.setSecurity(closeRateWithSecurity.getSecurity());
-        closeRate.setDate(closeRateWithDateAndRate.getDate());
-        closeRate.setRate(closeRateWithDateAndRate.getRate());
+        closeRate.setStockExchangeSymbol(closeRateWithSecurity.getStockExchangeSymbol());
+        closeRate.setSecuritySymbol(closeRateWithSecurity.getSecuritySymbol());
+        closeRate.setDate(closeRateWithDateRateAndGenerationInfo.getDate());
+        closeRate.setRate(closeRateWithDateRateAndGenerationInfo.getRate());
+        closeRate.setGenerated(closeRateWithDateRateAndGenerationInfo.isGenerated());
         return closeRate;
     }
 

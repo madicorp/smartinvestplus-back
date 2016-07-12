@@ -34,7 +34,8 @@ public class CloseRateDivisionAdjusterTest {
         Assertions.assertThat(actual)
                   .hasFieldOrPropertyWithValue("rate", 500.)
                   .hasFieldOrPropertyWithValue("date", closeRate.getDate())
-                  .hasFieldOrPropertyWithValue("security", closeRate.getSecurity())
+                  .hasFieldOrPropertyWithValue("stockExchangeSymbol", closeRate.getStockExchangeSymbol())
+                  .hasFieldOrPropertyWithValue("securitySymbol", closeRate.getSecuritySymbol())
                   .hasFieldOrPropertyWithValue("generated", closeRate.isGenerated());
     }
 }
