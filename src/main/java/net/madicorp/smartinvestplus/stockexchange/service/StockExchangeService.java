@@ -36,12 +36,12 @@ public class StockExchangeService {
         return value != null ? Optional.of(value) : Optional.empty();
     }
 
-    public SecurityWithStockExchange addDivision(SecurityWithStockExchange security, Division division) {
+    public Division addDivision(SecurityWithStockExchange security, Division division) {
         if(security.getDivisions().contains(division)) {
             throw new DivisionAlreadyExistsException();
         }
         security.addDivision(division);
         repository.addDivision(security.getStockExchange().getSymbol(), security.getSymbol(), division);
-        return security;
+        return division;
     }
 }
