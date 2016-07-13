@@ -4,6 +4,8 @@ jdk:
 cache:
     directories:
         - $HOME/.m2
+script:
+    - eval ./mvnw clean install
 notifications:
   webhooks:
     on_success: change  # options: [always|never|change] default: always
