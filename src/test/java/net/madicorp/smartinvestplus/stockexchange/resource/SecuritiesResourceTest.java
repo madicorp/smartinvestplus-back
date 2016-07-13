@@ -2,14 +2,16 @@ package net.madicorp.smartinvestplus.stockexchange.resource;
 
 import net.madicorp.smartinvestplus.stockexchange.StockExchangeMockData;
 import net.madicorp.smartinvestplus.stockexchange.domain.CloseRate;
-import net.madicorp.smartinvestplus.stockexchange.domain.Division;
 import net.madicorp.smartinvestplus.stockexchange.domain.SecurityWithStockExchange;
 import net.madicorp.smartinvestplus.stockexchange.repository.StockExchangeCRUDRepository;
 import net.madicorp.smartinvestplus.stockexchange.repository.StockExchangeRepository;
 import net.madicorp.smartinvestplus.stockexchange.service.CloseRateService;
-import net.madicorp.smartinvestplus.test.HttpTestHelperBuilder;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import net.madicorp.smartinvestplus.test.HttpTestConfig;
+import net.madicorp.smartinvestplus.test.HttpTestInjectBean;
+import net.madicorp.smartinvestplus.test.HttpTestRule;
+import net.madicorp.smartinvestplus.test.ResponseAssertion;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 import javax.ws.rs.client.Entity;
@@ -23,7 +25,6 @@ import java.util.Iterator;
 
 import static net.madicorp.smartinvestplus.stockexchange.StockExchangeMockData.closeRate;
 import static net.madicorp.smartinvestplus.stockexchange.StockExchangeMockData.division;
-import static net.madicorp.smartinvestplus.test.HttpTestHelperBuilder.builder;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -32,24 +33,17 @@ import static org.mockito.Mockito.when;
  * Date: 05/07/2016
  * Time: 21:46
  */
+@HttpTestConfig(StockExchangeResourceTestConfig.class)
 public class SecuritiesResourceTest {
-    private static HttpTestHelperBuilder.HttpTestHelper helper;
+    @ClassRule
+    public static final HttpTestRule rule = new HttpTestRule();
+
+    @HttpTestInjectBean
     private static StockExchangeCRUDRepository mockCRUDRepo;
+    @HttpTestInjectBean
     private static StockExchangeRepository mockRepo;
+    @HttpTestInjectBean
     private static CloseRateService mockCloseRateService;
-
-    @BeforeClass
-    public static void initContext() throws Exception {
-        helper = builder(() -> StockExchangeResourceTestConfig.class).build();
-        mockCRUDRepo = helper.context().getBean(StockExchangeCRUDRepository.class);
-        mockRepo = helper.context().getBean(StockExchangeRepository.class);
-        mockCloseRateService = helper.context().getBean(CloseRateService.class);
-    }
-
-    @AfterClass
-    public static void closeHelper() throws Exception {
-        helper.tearDown();
-    }
 
     @Test
     public void should_return_brvm_securities() throws Exception {
@@ -57,18 +51,18 @@ public class SecuritiesResourceTest {
         when(mockCRUDRepo.findOne("BRVM")).thenReturn(StockExchangeMockData.stockExchange());
 
         // WHEN
-        Response actual = helper.target("/api/stock-exchanges/BRVM/securities").request().get();
+        Response actual = rule.target("/api/stock-exchanges/BRVM/securities").request().get();
 
         // THEN
-        helper.assertThat(actual)
-              .success()
-              .hasSize("$", 2)
-              .contains("$[0].symbol", "sec_1")
-              .contains("$[0].name", "Security 1")
-              .contains("$[0].links[0].rel", "self")
-              .contains("$[0].links[0].href", "/api/stock-exchanges/BRVM/securities/sec_1")
-              .contains("$[0].links[1].rel", "close-rates")
-              .contains("$[0].links[1].href", "/api/stock-exchanges/BRVM/securities/sec_1/close-rates");
+        ResponseAssertion.assertThat(actual)
+                         .success()
+                         .hasSize("$", 2)
+                         .contains("$[0].symbol", "sec_1")
+                         .contains("$[0].name", "Security 1")
+                         .contains("$[0].links[0].rel", "self")
+                         .contains("$[0].links[0].href", "/api/stock-exchanges/BRVM/securities/sec_1")
+                         .contains("$[0].links[1].rel", "close-rates")
+                         .contains("$[0].links[1].href", "/api/stock-exchanges/BRVM/securities/sec_1/close-rates");
     }
 
     @Test
@@ -77,10 +71,10 @@ public class SecuritiesResourceTest {
         when(mockCRUDRepo.findOne("BRVM")).thenReturn(null);
 
         // WHEN
-        Response actual = helper.target("/api/stock-exchanges/BRVM/securities").request().get();
+        Response actual = rule.target("/api/stock-exchanges/BRVM/securities").request().get();
 
         // THEN
-        helper.assertThat(actual).notFound();
+        ResponseAssertion.assertThat(actual).notFound();
     }
 
     @Test
@@ -89,15 +83,15 @@ public class SecuritiesResourceTest {
         when(mockRepo.findSecurity("BRVM", "sec_1")).thenReturn(StockExchangeMockData.security());
 
         // WHEN
-        Response actual = helper.target("/api/stock-exchanges/BRVM/securities/sec_1").request().get();
+        Response actual = rule.target("/api/stock-exchanges/BRVM/securities/sec_1").request().get();
 
         // THEN
-        helper.assertThat(actual)
-              .success()
-              .contains("$.stockExchange.symbol", "BRVM")
-              .contains("$.stockExchange.name", "Bourse Régionale des VM")
-              .contains("$.symbol", "sec_1")
-              .contains("$.name", "Security 1");
+        ResponseAssertion.assertThat(actual)
+                         .success()
+                         .contains("$.stockExchange.symbol", "BRVM")
+                         .contains("$.stockExchange.name", "Bourse Régionale des VM")
+                         .contains("$.symbol", "sec_1")
+                         .contains("$.name", "Security 1");
     }
 
     @Test
@@ -114,16 +108,16 @@ public class SecuritiesResourceTest {
             .thenReturn(closeRates);
 
         // WHEN
-        Response actual = helper.target("/api/stock-exchanges/BRVM/securities/sec_1/close-rates").request().get();
+        Response actual = rule.target("/api/stock-exchanges/BRVM/securities/sec_1/close-rates").request().get();
 
         // THEN
-        helper.assertThat(actual)
-              .success()
-              .hasSize("$", 5)
-              .contains("$[0].date",
-                        LocalDate.of(2016, Month.FEBRUARY, 8).format(DateTimeFormatter.ISO_DATE))
-              .contains("$[0].rate", 990.)
-              .contains("$[0].generated", true);
+        ResponseAssertion.assertThat(actual)
+                         .success()
+                         .hasSize("$", 5)
+                         .contains("$[0].date",
+                                   LocalDate.of(2016, Month.FEBRUARY, 8).format(DateTimeFormatter.ISO_DATE))
+                         .contains("$[0].rate", 990.)
+                         .contains("$[0].generated", true);
         verify(mockCloseRateService).saveGenerated(closeRates);
     }
 
@@ -134,18 +128,18 @@ public class SecuritiesResourceTest {
 
         // WHEN
         String july122016 = LocalDate.of(2016, Month.JULY, 12).format(DateTimeFormatter.ISO_DATE);
-        Response actual = helper.target("/api/stock-exchanges/BRVM/securities/sec_1/divisions")
-                                .request(MediaType.APPLICATION_JSON_TYPE)
-                                .method("PUT", Entity.json("{" +
-                                                           "    \"rate\": 0.4," +
-                                                           "    \"date\": \"" + july122016 + "\"" +
-                                                           "}"));
+        Response actual = rule.target("/api/stock-exchanges/BRVM/securities/sec_1/divisions")
+                              .request(MediaType.APPLICATION_JSON_TYPE)
+                              .method("PUT", Entity.json("{" +
+                                                         "    \"rate\": 0.4," +
+                                                         "    \"date\": \"" + july122016 + "\"" +
+                                                         "}"));
 
         // THEN
-        helper.assertThat(actual)
-              .created()
-              .contains("$.date", july122016)
-              .contains("$.rate", .4);
+        ResponseAssertion.assertThat(actual)
+                         .created()
+                         .contains("$.date", july122016)
+                         .contains("$.rate", .4);
     }
 
     @Test
@@ -157,16 +151,17 @@ public class SecuritiesResourceTest {
         security.addDivision(division(july122016, .4));
 
         // WHEN
-        Response actual = helper.target("/api/stock-exchanges/BRVM/securities/sec_1/divisions")
-                                .request(MediaType.APPLICATION_JSON_TYPE)
-                                .method("PUT", Entity.json("{" +
-                                                           "    \"rate\": 0.4," +
-                                                           "    \"date\": \"" + july122016.format(DateTimeFormatter.ISO_DATE) + "\"" +
-                                                           "}"));
+        Response actual = rule.target("/api/stock-exchanges/BRVM/securities/sec_1/divisions")
+                              .request(MediaType.APPLICATION_JSON_TYPE)
+                              .method("PUT", Entity.json("{" +
+                                                         "    \"rate\": 0.4," +
+                                                         "    \"date\": \"" +
+                                                         july122016.format(DateTimeFormatter.ISO_DATE) + "\"" +
+                                                         "}"));
 
 
         // THEN
-        helper.assertThat(actual).badRequest();
+        ResponseAssertion.assertThat(actual).badRequest();
     }
 
     @Test
@@ -175,10 +170,10 @@ public class SecuritiesResourceTest {
         when(mockRepo.findSecurity("BRVM", "sec_1")).thenReturn(null);
 
         // WHEN
-        Response actual = helper.target("/api/stock-exchanges/BRVM/securities/sec_1").request().get();
+        Response actual = rule.target("/api/stock-exchanges/BRVM/securities/sec_1").request().get();
 
         // THEN
-        helper.assertThat(actual).notFound();
+        ResponseAssertion.assertThat(actual).notFound();
     }
 
     @Test
@@ -188,14 +183,14 @@ public class SecuritiesResourceTest {
 
         // WHEN
         String july122016 = LocalDate.of(2016, Month.JULY, 12).format(DateTimeFormatter.ISO_DATE);
-        Response actual = helper.target("/api/stock-exchanges/BRVM/securities/sec_1/divisions")
-                                .request(MediaType.APPLICATION_JSON_TYPE)
-                                .method("PUT", Entity.json("{" +
-                                                           "    \"rate\": 0.4," +
-                                                           "    \"date\": \"" + july122016 + "\"" +
-                                                           "}"));
+        Response actual = rule.target("/api/stock-exchanges/BRVM/securities/sec_1/divisions")
+                              .request(MediaType.APPLICATION_JSON_TYPE)
+                              .method("PUT", Entity.json("{" +
+                                                         "    \"rate\": 0.4," +
+                                                         "    \"date\": \"" + july122016 + "\"" +
+                                                         "}"));
 
         // THEN
-        helper.assertThat(actual).notFound();
+        ResponseAssertion.assertThat(actual).notFound();
     }
 }

@@ -49,6 +49,9 @@ public class StockExchangeService {
     }
 
     public Optional<StockExchangeHoliday> addHoliday(String stockExchangeSymbol, LocalDate holiday) {
+        if(repository.getHolidays(stockExchangeSymbol).contains(holiday)) {
+            return Optional.empty();
+        }
         repository.addHoliday(stockExchangeSymbol, holiday);
         StockExchangeHoliday stockExchangeHoliday = new StockExchangeHoliday();
         stockExchangeHoliday.setStockExchangeSymbol(stockExchangeSymbol);

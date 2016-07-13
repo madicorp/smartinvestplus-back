@@ -116,7 +116,7 @@ public class JongoStockExchangeRepository implements StockExchangeRepository {
              .upsert()
              .with(
                  "{" +
-                 "  '$push': {" +
+                 "  '$addToSet': {" +
                  "      'holidays': #" +
                  "  }" +
                  "}",

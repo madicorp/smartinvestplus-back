@@ -66,6 +66,11 @@ public class ResponseAssertion extends AbstractAssert<ResponseAssertion, Respons
         return this;
     }
 
+    public ResponseAssertion location(String path) {
+        Assertions.assertThat(actual.getLocation()).hasPath(path).hasScheme("http");
+        return this;
+    }
+
     private JsonAssertion getJsonAssertion() {
         if (jsonAssertion == null) {
             jsonAssertion = JsonAssertion.assertThat(getPayload());

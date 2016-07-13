@@ -33,14 +33,7 @@ public class LocalDateDeserializer extends JsonDeserializer<LocalDate> {
             } catch (DateTimeParseException e) {
                 throw context.weirdStringException(formattedDate, LocalDate.class, "Expected ISO-8601 formatted date.");
             }
-        } else {
-            // This part is for the API which may pass an ISO date directly
-            try {
-                return LocalDate.parse(formattedIsoDate, DateTimeFormatter.ISO_DATE_TIME);
-            } catch (DateTimeParseException e) {
-                throw context
-                    .weirdStringException(formattedIsoDate, LocalDate.class, "Expected ISO-8601 formatted date.");
-            }
         }
+        throw context.weirdStringException(formattedIsoDate, LocalDate.class, "Expected ISO-8601 formatted date.");
     }
 }

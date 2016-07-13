@@ -4,7 +4,6 @@ import net.madicorp.smartinvestplus.config.JerseyConfig;
 import net.madicorp.smartinvestplus.config.JerseyMapperProvider;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.test.JerseyTest;
-import org.glassfish.jersey.test.TestProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
@@ -34,8 +33,6 @@ public class HttpTestHelperBuilder {
 
     public class HttpTestHelper extends JerseyTest {
         private ApplicationContext context;
-        private final Object hasBeenSetUpLock = new Object();
-        private Boolean hasBeenSetUp = false;
 
         @Override
         protected Application configure() {
@@ -46,19 +43,7 @@ public class HttpTestHelperBuilder {
         }
 
         public ApplicationContext context() throws Exception {
-            setUpIfNotDoneYet();
             return context;
-        }
-
-        private void setUpIfNotDoneYet() throws Exception {
-            if(!hasBeenSetUp) {
-                synchronized (hasBeenSetUpLock) {
-                    if(!hasBeenSetUp) {
-                        this.setUp();
-                    }
-                    hasBeenSetUp = true;
-                }
-            }
         }
 
         public ResponseAssertion assertThat(Response actual) {

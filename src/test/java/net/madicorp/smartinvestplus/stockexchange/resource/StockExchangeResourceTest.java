@@ -1,16 +1,17 @@
 package net.madicorp.smartinvestplus.stockexchange.resource;
 
 import net.madicorp.smartinvestplus.stockexchange.repository.StockExchangeCRUDRepository;
-import net.madicorp.smartinvestplus.test.HttpTestHelperBuilder;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import net.madicorp.smartinvestplus.test.HttpTestConfig;
+import net.madicorp.smartinvestplus.test.HttpTestInjectBean;
+import net.madicorp.smartinvestplus.test.HttpTestRule;
+import net.madicorp.smartinvestplus.test.ResponseAssertion;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 import javax.ws.rs.core.Response;
 import java.util.Collections;
 
 import static net.madicorp.smartinvestplus.stockexchange.StockExchangeMockData.stockExchange;
-import static net.madicorp.smartinvestplus.test.HttpTestHelperBuilder.builder;
 import static org.mockito.Mockito.when;
 
 /**
@@ -18,21 +19,13 @@ import static org.mockito.Mockito.when;
  * Date: 03/07/2016
  * Time: 15:39
  */
-
+@HttpTestConfig(StockExchangeResourceTestConfig.class)
 public class StockExchangeResourceTest {
-    private static HttpTestHelperBuilder.HttpTestHelper helper;
+    @ClassRule
+    public static final HttpTestRule rule = new HttpTestRule();
+
+    @HttpTestInjectBean
     private static StockExchangeCRUDRepository mockRepo;
-
-    @BeforeClass
-    public static void initContext() throws Exception {
-        helper = builder(() -> StockExchangeResourceTestConfig.class).build();
-        mockRepo = helper.context().getBean(StockExchangeCRUDRepository.class);
-    }
-
-    @AfterClass
-    public static void closeHelper() throws Exception {
-        helper.tearDown();
-    }
 
     @Test
     public void should_return_stock_exchanges_and_related_security_links() throws Exception {
@@ -40,15 +33,15 @@ public class StockExchangeResourceTest {
         when(mockRepo.findAll()).thenReturn(Collections.singletonList(stockExchange()));
 
         // WHEN
-        Response actual = helper.target("/api/stock-exchanges/").request().get();
+        Response actual = rule.target("/api/stock-exchanges/").request().get();
 
         // THEN
-        helper.assertThat(actual)
-              .success()
-              .hasSize("$", 1)
-              .contains("$[0].symbol", "BRVM")
-              .contains("$[0].links[0].rel", "security")
-              .contains("$[0].links[0].href", "/api/stock-exchanges/BRVM/securities/sec_1");
+        ResponseAssertion.assertThat(actual)
+                         .success()
+                         .hasSize("$", 1)
+                         .contains("$[0].symbol", "BRVM")
+                         .contains("$[0].links[0].rel", "security")
+                         .contains("$[0].links[0].href", "/api/stock-exchanges/BRVM/securities/sec_1");
     }
 
     @Test
@@ -57,15 +50,15 @@ public class StockExchangeResourceTest {
         when(mockRepo.findOne("BRVM")).thenReturn(stockExchange());
 
         // WHEN
-        Response actual = helper.target("/api/stock-exchanges/BRVM").request().get();
+        Response actual = rule.target("/api/stock-exchanges/BRVM").request().get();
 
         // THEN
-        helper.assertThat(actual)
-              .success()
-              .hasSize("$.links", 2)
-              .contains("$.symbol", "BRVM")
-              .contains("$.links[0].rel", "security")
-              .contains("$.links[0].href", "/api/stock-exchanges/BRVM/securities/sec_1");
+        ResponseAssertion.assertThat(actual)
+                         .success()
+                         .hasSize("$.links", 2)
+                         .contains("$.symbol", "BRVM")
+                         .contains("$.links[0].rel", "security")
+                         .contains("$.links[0].href", "/api/stock-exchanges/BRVM/securities/sec_1");
     }
 
     @Test
@@ -74,12 +67,12 @@ public class StockExchangeResourceTest {
         when(mockRepo.findOne("BRVM")).thenReturn(null);
 
         // WHEN
-        Response actual = helper.target("/api/stock-exchanges/BRVM").request().get();
+        Response actual = rule.target("/api/stock-exchanges/BRVM").request().get();
 
         // THEN
-        helper.assertThat(actual)
-              .notFound()
-              .payloadIsEqualTo("Stock exchange 'BRVM' has not been found");
+        ResponseAssertion.assertThat(actual)
+                         .notFound()
+                         .payloadIsEqualTo("Stock exchange 'BRVM' has not been found");
     }
 
 }
