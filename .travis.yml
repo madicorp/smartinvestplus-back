@@ -4,6 +4,7 @@ jdk:
 cache:
     directories:
         - $HOME/.m2
+install: eval ./mvnw clean install -DskipTests=true -B -V
 script: eval ./mvnw clean install
 notifications:
   webhooks:
