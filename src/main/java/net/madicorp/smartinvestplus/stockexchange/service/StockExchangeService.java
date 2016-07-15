@@ -40,7 +40,7 @@ public class StockExchangeService {
     }
 
     public Division addDivision(SecurityWithStockExchange security, Division division) {
-        if(security.getDivisions().contains(division)) {
+        if (security.getDivisions().contains(division)) {
             throw new DivisionAlreadyExistsException();
         }
         security.addDivision(division);
@@ -49,13 +49,29 @@ public class StockExchangeService {
     }
 
     public Optional<StockExchangeHoliday> addHoliday(String stockExchangeSymbol, LocalDate holiday) {
-        if(repository.getHolidays(stockExchangeSymbol).contains(holiday)) {
+        if (repository.getHolidays(stockExchangeSymbol).contains(holiday)) {
             return Optional.empty();
         }
         repository.addHoliday(stockExchangeSymbol, holiday);
-        StockExchangeHoliday stockExchangeHoliday = new StockExchangeHoliday();
-        stockExchangeHoliday.setStockExchangeSymbol(stockExchangeSymbol);
-        stockExchangeHoliday.setDate(holiday);
+        StockExchangeHoliday stockExchangeHoliday = StockExchangeHoliday.builder()
+                                                                        .stockExchangeSymbol(stockExchangeSymbol)
+                                                                        .date(holiday)
+                                                                        .build();
         return Optional.of(stockExchangeHoliday);
+    }
+
+    public Optional<StockExchangeHoliday> getHoliday(String stockExchangeSymbol, LocalDate holiday) {
+        StockExchangeHoliday stockExchangeHoliday = StockExchangeHoliday.builder()
+                                                                        .date(holiday)
+                                                                        .stockExchangeSymbol(stockExchangeSymbol)
+                                                                        .build();
+        return repository.containsHoliday(stockExchangeSymbol, holiday) ?
+            Optional.of(stockExchangeHoliday) :
+            Optional.empty();
+    }
+
+    public Optional<Division> getDivision(String stockExchangeSymbol, String securitySymbol,
+                                          LocalDate divisionDate) {
+        return repository.getDivision(stockExchangeSymbol, securitySymbol, divisionDate);
     }
 }

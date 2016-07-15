@@ -5,8 +5,10 @@ import net.madicorp.smartinvestplus.test.HttpTestConfig;
 import net.madicorp.smartinvestplus.test.HttpTestInjectBean;
 import net.madicorp.smartinvestplus.test.HttpTestRule;
 import net.madicorp.smartinvestplus.test.ResponseAssertion;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Response;
@@ -30,8 +32,13 @@ public class HolidaysResourceTest {
     @HttpTestInjectBean
     private static StockExchangeRepository mockRepo;
 
+    @Before
+    public void resetMock() throws Exception {
+        Mockito.reset(mockRepo);
+    }
+
     @Test
-    public void should_return_201_and_add_holiday_if_does_not_exist() throws Exception {
+    public void should_return_201_and_add_holiday_if_does_not_exist_in_stock_exchange() throws Exception {
         // GIVEN
         when(mockRepo.getHolidays("brvm")).thenReturn(Collections.emptySet());
 
@@ -52,7 +59,7 @@ public class HolidaysResourceTest {
     }
 
     @Test
-    public void should_return_400_and_if_holiday_does_not_exist() throws Exception {
+    public void should_return_400_and_if_holiday_exists_in_stock_exchange() throws Exception {
         // GIVEN
         LocalDate july142016 = LocalDate.of(2016, Month.JULY, 14);
         when(mockRepo.getHolidays("brvm")).thenReturn(Collections.singleton(july142016));
@@ -67,5 +74,41 @@ public class HolidaysResourceTest {
         ResponseAssertion.assertThat(actual)
                          .badRequest();
         verify(mockRepo, never()).addHoliday("brvm", july142016);
+    }
+
+    @Test
+    public void should_return_200_if_it_can_get_holiday_in_stock_exchange() throws Exception {
+        // GIVEN
+        LocalDate july142016 = LocalDate.of(2016, Month.JULY, 14);
+        when(mockRepo.containsHoliday("brvm", july142016)).thenReturn(true);
+        String july142016String = july142016.format(DateTimeFormatter.ISO_DATE);
+
+        // WHEN
+        Response actual = rule
+            .target("/api/stock-exchanges/brvm/holidays/" + july142016.format(DateTimeFormatter.BASIC_ISO_DATE))
+            .request()
+            .get();
+
+        // THEN
+        ResponseAssertion.assertThat(actual)
+                         .success()
+                         .contains("$.stock_exchange", "brvm")
+                         .contains("$.date", july142016String);
+    }
+
+    @Test
+    public void should_return_404_if_it_can_get_holiday_in_stock_exchange() throws Exception {
+        // GIVEN
+        LocalDate july142016 = LocalDate.of(2016, Month.JULY, 14);
+        when(mockRepo.containsHoliday("brvm", july142016)).thenReturn(false);
+
+        // WHEN
+        Response actual = rule
+            .target("/api/stock-exchanges/brvm/holidays/" + july142016.format(DateTimeFormatter.BASIC_ISO_DATE))
+            .request()
+            .get();
+
+        // THEN
+        ResponseAssertion.assertThat(actual).notFound();
     }
 }
