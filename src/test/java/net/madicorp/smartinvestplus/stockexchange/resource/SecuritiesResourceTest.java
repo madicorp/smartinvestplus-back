@@ -11,7 +11,6 @@ import net.madicorp.smartinvestplus.test.HttpTestInjectBean;
 import net.madicorp.smartinvestplus.test.HttpTestRule;
 import net.madicorp.smartinvestplus.test.ResponseAssertion;
 import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
 
 import javax.ws.rs.client.Entity;
@@ -22,6 +21,7 @@ import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.Optional;
 
 import static net.madicorp.smartinvestplus.stockexchange.StockExchangeMockData.closeRate;
 import static net.madicorp.smartinvestplus.stockexchange.StockExchangeMockData.division;
@@ -138,6 +138,7 @@ public class SecuritiesResourceTest {
         // THEN
         ResponseAssertion.assertThat(actual)
                          .created()
+                         .location("/api/stock-exchanges/BRVM/securities/sec_1/divisions/20160712")
                          .contains("$.date", july122016)
                          .contains("$.rate", .4);
     }
@@ -189,6 +190,44 @@ public class SecuritiesResourceTest {
                                                          "    \"rate\": 0.4," +
                                                          "    \"date\": \"" + july122016 + "\"" +
                                                          "}"));
+
+        // THEN
+        ResponseAssertion.assertThat(actual).notFound();
+    }
+
+    @Test
+    public void should_return_200_if_it_can_get_division_in_security() throws Exception {
+        // GIVEN
+        LocalDate july142016 = LocalDate.of(2016, Month.JULY, 14);
+        when(mockRepo.getDivision("brvm", "sec_1", july142016)).thenReturn(Optional.of(division(july142016, .4)));
+        String july142016String = july142016.format(DateTimeFormatter.ISO_DATE);
+
+        // WHEN
+        Response actual = rule
+            .target("/api/stock-exchanges/brvm/securities/sec_1/divisions/" +
+                    july142016.format(DateTimeFormatter.BASIC_ISO_DATE))
+            .request()
+            .get();
+
+        // THEN
+        ResponseAssertion.assertThat(actual)
+                         .success()
+                         .contains("$.rate", .4)
+                         .contains("$.date", july142016String);
+    }
+
+    @Test
+    public void should_return_404_if_it_can_get_holiday_in_stock_exchange() throws Exception {
+        // GIVEN
+        LocalDate july142016 = LocalDate.of(2016, Month.JULY, 14);
+        when(mockRepo.getDivision("brvm", "sec_1", july142016)).thenReturn(Optional.empty());
+
+        // WHEN
+        Response actual = rule
+            .target("/api/stock-exchanges/brvm/securities/sec_1/divisions/" +
+                    july142016.format(DateTimeFormatter.BASIC_ISO_DATE))
+            .request()
+            .get();
 
         // THEN
         ResponseAssertion.assertThat(actual).notFound();
