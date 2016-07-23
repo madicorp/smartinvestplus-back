@@ -1,7 +1,7 @@
 package net.madicorp.smartinvestplus.web.rest;
 
-import net.madicorp.smartinvestplus.config.Constants;
 import com.codahale.metrics.annotation.Timed;
+import net.madicorp.smartinvestplus.config.Constants;
 import net.madicorp.smartinvestplus.domain.Authority;
 import net.madicorp.smartinvestplus.domain.User;
 import net.madicorp.smartinvestplus.repository.AuthorityRepository;
@@ -15,24 +15,28 @@ import net.madicorp.smartinvestplus.web.rest.util.PaginationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 import java.net.URI;
 import java.net.URISyntaxException;
-import javax.servlet.http.HttpServletRequest;
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
  * REST controller for managing users.
- *
+ * <p>
  * <p>This class accesses the User entity, and needs to fetch its collection of authorities.</p>
  * <p>
  * For a normal use-case, it would be better to have an eager relationship between User and Authority,
@@ -54,18 +58,23 @@ import java.util.stream.Collectors;
  * </ul>
  * <p>Another option would be to have a specific JPA entity graph to handle this case.</p>
  */
-@RestController
-@RequestMapping("/api")
+@Component
+@Path("/api/users/")
 public class UserResource {
 
     private final Logger log = LoggerFactory.getLogger(UserResource.class);
+
+    @Context
+    private UriInfo uriInfo;
+
+    @Inject
+    private HttpUtil httpUtil;
 
     @Inject
     private UserRepository userRepository;
 
     @Inject
     private MailService mailService;
-
 
     @Inject
     private AuthorityRepository authorityRepository;
@@ -82,39 +91,33 @@ public class UserResource {
      * </p>
      *
      * @param managedUserDTO the user to create
-     * @param request the HTTP request
-     * @return the ResponseEntity with status 201 (Created) and with body the new user, or with status 400 (Bad Request) if the login or email is already in use
+     * @return the Response with status 201 (Created) and with body the new user, or with status 400 (Bad Request) if the login or email is already in use
      * @throws URISyntaxException if the Location URI syntaxt is incorrect
      */
-    @RequestMapping(value = "/users",
-        method = RequestMethod.POST,
-        produces = MediaType.APPLICATION_JSON_VALUE)
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @Timed
     @Secured(AuthoritiesConstants.ADMIN)
-    public ResponseEntity<?> createUser(@RequestBody ManagedUserDTO managedUserDTO, HttpServletRequest request) throws URISyntaxException {
+    public Response createUser(ManagedUserDTO managedUserDTO) throws URISyntaxException {
         log.debug("REST request to save User : {}", managedUserDTO);
 
         //Lowercase the user login before comparing with database
         if (userRepository.findOneByLogin(managedUserDTO.getLogin().toLowerCase()).isPresent()) {
-            return ResponseEntity.badRequest()
-                .headers(HeaderUtil.createFailureAlert("userManagement", "userexists", "Login already in use"))
-                .body(null);
+            HttpHeaders headers =
+                HeaderUtil.createFailureAlert("userManagement", "userexists", "Login already in use");
+            return httpUtil.addHeaders(httpUtil.badRequestBuilder(), headers).build();
         } else if (userRepository.findOneByEmail(managedUserDTO.getEmail()).isPresent()) {
-            return ResponseEntity.badRequest()
-                .headers(HeaderUtil.createFailureAlert("userManagement", "emailexists", "Email already in use"))
-                .body(null);
+            HttpHeaders headers =
+                HeaderUtil.createFailureAlert("userManagement", "emailexists", "Email already in use");
+            return httpUtil.addHeaders(httpUtil.badRequestBuilder(), headers).build();
         } else {
             User newUser = userService.createUser(managedUserDTO);
-            String baseUrl = request.getScheme() + // "http"
-            "://" +                                // "://"
-            request.getServerName() +              // "myhost"
-            ":" +                                  // ":"
-            request.getServerPort() +              // "80"
-            request.getContextPath();              // "/myContextPath" or "" if deployed in root context
-            mailService.sendCreationEmail(newUser, baseUrl);
-            return ResponseEntity.created(new URI("/api/users/" + newUser.getLogin()))
-                .headers(HeaderUtil.createAlert( "userManagement.created", newUser.getLogin()))
-                .body(newUser);
+            mailService.sendCreationEmail(newUser, httpUtil.getBaseUrl(uriInfo));
+            HttpHeaders headers = HeaderUtil.createAlert("userManagement.created", newUser.getLogin());
+            return httpUtil.addHeaders(Response.created(new URI("/api/users/" + newUser.getLogin())), headers)
+                           .entity(newUser)
+                           .build();
         }
     }
 
@@ -122,101 +125,117 @@ public class UserResource {
      * PUT  /users : Updates an existing User.
      *
      * @param managedUserDTO the user to update
-     * @return the ResponseEntity with status 200 (OK) and with body the updated user,
+     * @return the Response with status 200 (OK) and with body the updated user,
      * or with status 400 (Bad Request) if the login or email is already in use,
      * or with status 500 (Internal Server Error) if the user couldnt be updated
      */
-    @RequestMapping(value = "/users",
-        method = RequestMethod.PUT,
-        produces = MediaType.APPLICATION_JSON_VALUE)
+    @PUT
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @Timed
     @Secured(AuthoritiesConstants.ADMIN)
-    public ResponseEntity<ManagedUserDTO> updateUser(@RequestBody ManagedUserDTO managedUserDTO) {
+    public Response updateUser(ManagedUserDTO managedUserDTO) {
         log.debug("REST request to update User : {}", managedUserDTO);
         Optional<User> existingUser = userRepository.findOneByEmail(managedUserDTO.getEmail());
         if (existingUser.isPresent() && (!existingUser.get().getId().equals(managedUserDTO.getId()))) {
-            return ResponseEntity.badRequest().headers(HeaderUtil.createFailureAlert("userManagement", "emailexists", "E-mail already in use")).body(null);
+            HttpHeaders headers =
+                HeaderUtil.createFailureAlert("userManagement", "emailexists", "E-mail already in use");
+            return httpUtil.addHeaders(httpUtil.badRequestBuilder(), headers).build();
+
         }
         existingUser = userRepository.findOneByLogin(managedUserDTO.getLogin().toLowerCase());
         if (existingUser.isPresent() && (!existingUser.get().getId().equals(managedUserDTO.getId()))) {
-            return ResponseEntity.badRequest().headers(HeaderUtil.createFailureAlert("userManagement", "userexists", "Login already in use")).body(null);
+            HttpHeaders headers =
+                HeaderUtil.createFailureAlert("userManagement", "userexists", "Login already in use");
+            return httpUtil.addHeaders(httpUtil.badRequestBuilder(), headers).build();
         }
-        return userRepository
-            .findOneById(managedUserDTO.getId())
-            .map(user -> {
-                user.setLogin(managedUserDTO.getLogin());
-                user.setFirstName(managedUserDTO.getFirstName());
-                user.setLastName(managedUserDTO.getLastName());
-                user.setEmail(managedUserDTO.getEmail());
-                user.setActivated(managedUserDTO.isActivated());
-                user.setLangKey(managedUserDTO.getLangKey());
-                Set<Authority> authorities = user.getAuthorities();
-                authorities.clear();
-                managedUserDTO.getAuthorities().stream().forEach(
-                    authority -> authorities.add(authorityRepository.findOne(authority))
-                );
-                userRepository.save(user);
-                return ResponseEntity.ok()
-                    .headers(HeaderUtil.createAlert("userManagement.updated", managedUserDTO.getLogin()))
-                    .body(new ManagedUserDTO(userRepository
-                        .findOne(managedUserDTO.getId())));
-            })
-            .orElseGet(() -> new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR));
+        return userRepository.findOneById(managedUserDTO.getId())
+                             .map(user -> {
+                                 updateUser(managedUserDTO, user);
+                                 HttpHeaders headers =
+                                     HeaderUtil.createAlert("userManagement.updated", managedUserDTO.getLogin());
+                                 return httpUtil.addHeaders(Response.ok(), headers)
+                                                .entity(
+                                                    new ManagedUserDTO(userRepository.findOne(managedUserDTO.getId())))
+                                                .build();
 
+                             })
+                             .orElseGet(() -> httpUtil.serverError());
+
+    }
+
+    private void updateUser(ManagedUserDTO managedUserDTO, User user) {
+        user.setLogin(managedUserDTO.getLogin());
+        user.setFirstName(managedUserDTO.getFirstName());
+        user.setLastName(managedUserDTO.getLastName());
+        user.setEmail(managedUserDTO.getEmail());
+        user.setActivated(managedUserDTO.isActivated());
+        user.setLangKey(managedUserDTO.getLangKey());
+        Set<Authority> authorities = user.getAuthorities();
+        authorities.clear();
+        managedUserDTO.getAuthorities().forEach(
+            authority -> authorities.add(authorityRepository.findOne(authority))
+        );
+        userRepository.save(user);
     }
 
     /**
      * GET  /users : get all users.
-     * 
-     * @param pageable the pagination information
-     * @return the ResponseEntity with status 200 (OK) and with body all users
+     *
+     * @param page the page to be retrieved
+     * @param size number of elements to be retrieved
+     * @return the Response with status 200 (OK) and with body all users
      * @throws URISyntaxException if the pagination headers couldnt be generated
      */
-    @RequestMapping(value = "/users",
-        method = RequestMethod.GET,
-        produces = MediaType.APPLICATION_JSON_VALUE)
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
     @Timed
-    public ResponseEntity<List<ManagedUserDTO>> getAllUsers(Pageable pageable)
+    public Response getAllUsers(@QueryParam("page") int page,
+                                @QueryParam("size") int size)
         throws URISyntaxException {
-        Page<User> page = userRepository.findAll(pageable);
-        List<ManagedUserDTO> managedUserDTOs = page.getContent().stream()
-            .map(ManagedUserDTO::new)
-            .collect(Collectors.toList());
-        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/api/users");
-        return new ResponseEntity<>(managedUserDTOs, headers, HttpStatus.OK);
+        Page<User> userPage = userRepository.findAll(new PageRequest(page, size));
+        List<ManagedUserDTO> managedUserDTOs = userPage.getContent().stream()
+                                                       .map(ManagedUserDTO::new)
+                                                       .collect(Collectors.toList());
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(userPage, httpUtil.getBaseUrl(uriInfo));
+        return httpUtil.addHeaders(Response.ok(), headers)
+                       .entity(managedUserDTOs)
+                       .build();
+
     }
 
     /**
      * GET  /users/:login : get the "login" user.
      *
      * @param login the login of the user to find
-     * @return the ResponseEntity with status 200 (OK) and with body the "login" user, or with status 404 (Not Found)
+     * @return the Response with status 200 (OK) and with body the "login" user, or with status 404 (Not Found)
      */
-    @RequestMapping(value = "/users/{login:" + Constants.LOGIN_REGEX + "}",
-        method = RequestMethod.GET,
-        produces = MediaType.APPLICATION_JSON_VALUE)
+    @GET
+    @Path("/{login: " + Constants.LOGIN_REGEX + "}")
+    @Produces(MediaType.APPLICATION_JSON)
     @Timed
-    public ResponseEntity<ManagedUserDTO> getUser(@PathVariable String login) {
+    public Response getUser(@PathParam("login") String login) {
         log.debug("REST request to get User : {}", login);
         return userService.getUserWithAuthoritiesByLogin(login)
-                .map(ManagedUserDTO::new)
-                .map(managedUserDTO -> new ResponseEntity<>(managedUserDTO, HttpStatus.OK))
-                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+                          .map(ManagedUserDTO::new)
+                          .map(managedUserDTO -> Response.ok().entity(managedUserDTO).build())
+                          .orElse(httpUtil.notFound());
     }
+
     /**
      * DELETE  USER :login : delete the "login" User.
      *
      * @param login the login of the user to delete
      * @return the ResponseEntity with status 200 (OK)
      */
-    @RequestMapping(value = "/users/{login:" + Constants.LOGIN_REGEX + "}",
-        method = RequestMethod.DELETE,
-        produces = MediaType.APPLICATION_JSON_VALUE)
+    @DELETE
+    @Path("/{login: " + Constants.LOGIN_REGEX + "}")
+    @Produces(MediaType.APPLICATION_JSON)
     @Timed
     @Secured(AuthoritiesConstants.ADMIN)
-    public ResponseEntity<Void> deleteUser(@PathVariable String login) {
+    public ResponseEntity<Void> deleteUser(@PathParam("login") String login) {
         log.debug("REST request to delete User: {}", login);
         userService.deleteUserInformation(login);
-        return ResponseEntity.ok().headers(HeaderUtil.createAlert( "userManagement.deleted", login)).build();
+        return ResponseEntity.ok().headers(HeaderUtil.createAlert("userManagement.deleted", login)).build();
     }
 }

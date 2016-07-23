@@ -1,13 +1,13 @@
 package net.madicorp.smartinvestplus.date;
 
 import net.madicorp.smartinvestplus.stockexchange.repository.StockExchangeRepository;
-import net.madicorp.smartinvestplus.test.HttpTestConfig;
-import net.madicorp.smartinvestplus.test.HttpTestInjectBean;
 import net.madicorp.smartinvestplus.test.HttpTestRule;
 import net.madicorp.smartinvestplus.test.ResponseAssertion;
 import org.junit.ClassRule;
 import org.junit.Test;
+import org.springframework.boot.test.SpringApplicationConfiguration;
 
+import javax.inject.Inject;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Response;
 import java.time.LocalDate;
@@ -22,12 +22,12 @@ import static org.mockito.Mockito.*;
  * Date: 12/07/2016
  * Time: 22:05
  */
-@HttpTestConfig(DateResourceTestConfig.class)
+@SpringApplicationConfiguration(DateResourceTestConfig.class)
 public class HolidaysResourceTest {
     @ClassRule
     public static final HttpTestRule rule = new HttpTestRule();
 
-    @HttpTestInjectBean
+    @Inject
     private static StockExchangeRepository mockRepo;
 
     @Test
@@ -38,9 +38,8 @@ public class HolidaysResourceTest {
         // WHEN
         LocalDate july142016 = LocalDate.of(2016, Month.JULY, 14);
         String july142016String = july142016.format(DateTimeFormatter.ISO_DATE);
-        Response actual = rule.target("/api/stock-exchanges/brvm/holidays")
-                              .request()
-                              .put(Entity.json("\"" + july142016String + "\""));
+        Response actual = rule.put("/api/stock-exchanges/brvm/holidays",
+                                   Entity.json("\"" + july142016String + "\""));
 
         // THEN
         ResponseAssertion.assertThat(actual)
@@ -59,9 +58,7 @@ public class HolidaysResourceTest {
 
         // WHEN
         String july142016String = july142016.format(DateTimeFormatter.ISO_DATE);
-        Response actual = rule.target("/api/stock-exchanges/brvm/holidays")
-                              .request()
-                              .put(Entity.json("\"" + july142016String + "\""));
+        Response actual = rule.put("/api/stock-exchanges/brvm/holidays", Entity.json("\"" + july142016String + "\""));
 
         // THEN
         ResponseAssertion.assertThat(actual)

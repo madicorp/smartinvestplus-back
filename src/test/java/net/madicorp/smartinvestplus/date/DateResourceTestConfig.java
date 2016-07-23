@@ -5,6 +5,7 @@ import net.madicorp.smartinvestplus.stockexchange.repository.CloseRateRepository
 import net.madicorp.smartinvestplus.stockexchange.repository.StockExchangeCRUDRepository;
 import net.madicorp.smartinvestplus.stockexchange.repository.StockExchangeRepository;
 import net.madicorp.smartinvestplus.stockexchange.service.StockExchangeService;
+import net.madicorp.smartinvestplus.web.rest.HttpUtil;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -23,6 +24,11 @@ public class DateResourceTestConfig {
     @Bean
     public StockExchangeService stockExchangeService() {
         return new StockExchangeService();
+    }
+
+    @Bean
+    public HttpUtil httpUtil() {
+        return new HttpUtil();
     }
 
     @Bean

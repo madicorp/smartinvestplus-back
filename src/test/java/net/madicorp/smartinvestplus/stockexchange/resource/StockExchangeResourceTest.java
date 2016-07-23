@@ -1,13 +1,13 @@
 package net.madicorp.smartinvestplus.stockexchange.resource;
 
 import net.madicorp.smartinvestplus.stockexchange.repository.StockExchangeCRUDRepository;
-import net.madicorp.smartinvestplus.test.HttpTestConfig;
-import net.madicorp.smartinvestplus.test.HttpTestInjectBean;
 import net.madicorp.smartinvestplus.test.HttpTestRule;
 import net.madicorp.smartinvestplus.test.ResponseAssertion;
 import org.junit.ClassRule;
 import org.junit.Test;
+import org.springframework.boot.test.SpringApplicationConfiguration;
 
+import javax.inject.Inject;
 import javax.ws.rs.core.Response;
 import java.util.Collections;
 
@@ -19,12 +19,12 @@ import static org.mockito.Mockito.when;
  * Date: 03/07/2016
  * Time: 15:39
  */
-@HttpTestConfig(StockExchangeResourceTestConfig.class)
+@SpringApplicationConfiguration(StockExchangeResourceTestConfig.class)
 public class StockExchangeResourceTest {
     @ClassRule
     public static final HttpTestRule rule = new HttpTestRule();
 
-    @HttpTestInjectBean
+    @Inject
     private static StockExchangeCRUDRepository mockRepo;
 
     @Test
@@ -33,11 +33,11 @@ public class StockExchangeResourceTest {
         when(mockRepo.findAll()).thenReturn(Collections.singletonList(stockExchange()));
 
         // WHEN
-        Response actual = rule.target("/api/stock-exchanges/").request().get();
+        Response actual = rule.get("/api/stock-exchanges/");
 
         // THEN
         ResponseAssertion.assertThat(actual)
-                         .success()
+                         .ok()
                          .hasSize("$", 1)
                          .contains("$[0].symbol", "BRVM")
                          .contains("$[0].links[0].rel", "security")
@@ -50,11 +50,11 @@ public class StockExchangeResourceTest {
         when(mockRepo.findOne("BRVM")).thenReturn(stockExchange());
 
         // WHEN
-        Response actual = rule.target("/api/stock-exchanges/BRVM").request().get();
+        Response actual = rule.get("/api/stock-exchanges/BRVM");
 
         // THEN
         ResponseAssertion.assertThat(actual)
-                         .success()
+                         .ok()
                          .hasSize("$.links", 2)
                          .contains("$.symbol", "BRVM")
                          .contains("$.links[0].rel", "security")
@@ -67,7 +67,7 @@ public class StockExchangeResourceTest {
         when(mockRepo.findOne("BRVM")).thenReturn(null);
 
         // WHEN
-        Response actual = rule.target("/api/stock-exchanges/BRVM").request().get();
+        Response actual = rule.get("/api/stock-exchanges/BRVM");
 
         // THEN
         ResponseAssertion.assertThat(actual)

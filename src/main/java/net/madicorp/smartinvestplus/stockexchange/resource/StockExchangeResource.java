@@ -5,17 +5,18 @@ import net.madicorp.smartinvestplus.stockexchange.domain.Security;
 import net.madicorp.smartinvestplus.stockexchange.domain.StockExchangeWithSecurities;
 import net.madicorp.smartinvestplus.stockexchange.repository.StockExchangeCRUDRepository;
 import net.madicorp.smartinvestplus.stockexchange.service.StockExchangeService;
+import net.madicorp.smartinvestplus.web.rest.HttpUtil;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 import java.util.List;
@@ -31,6 +32,9 @@ public class StockExchangeResource {
     private UriInfo uriInfo;
 
     @Inject
+    private HttpUtil httpUtil;
+
+    @Inject
     private StockExchangeCRUDRepository repository;
 
     @Inject
@@ -43,11 +47,11 @@ public class StockExchangeResource {
      */
     @Path("/stock-exchanges/")
     @GET
-    @Produces(MediaType.APPLICATION_JSON_VALUE)
+    @Produces(MediaType.APPLICATION_JSON)
     public JSONArray getStockExchanges() {
         log.debug("REST request to get stock exchanges");
         List<StockExchangeWithSecurities> stockExchanges = repository.findAll();
-        UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder();
+        UriBuilder uriBuilder = httpUtil.getUriBuilder(uriInfo);
         return stockExchanges.stream()
                              .map(stockExchange ->
                                       this.buildStockExchangeJSON(stockExchange,
@@ -59,12 +63,12 @@ public class StockExchangeResource {
 
     @Path("/stock-exchanges/{symbol}")
     @GET
-    @Produces(MediaType.APPLICATION_JSON_VALUE)
+    @Produces(MediaType.APPLICATION_JSON)
     public JSONObject getStockExchange(@PathParam("symbol") String symbol) {
         log.debug("REST request to get stock exchange: {}", symbol);
         StockExchangeWithSecurities stockExchange =
             stockExchangeService.getStockExchange(symbol).orElseThrow(() -> new StockExchangeNotFoundException(symbol));
-        return this.buildStockExchangeJSON(stockExchange, () -> uriInfo.getAbsolutePathBuilder());
+        return this.buildStockExchangeJSON(stockExchange, () -> httpUtil.getUriBuilder(uriInfo));
     }
 
     private JSONObject buildStockExchangeJSON(StockExchangeWithSecurities stockExchange,

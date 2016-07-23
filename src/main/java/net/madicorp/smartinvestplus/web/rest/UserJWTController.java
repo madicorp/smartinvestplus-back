@@ -1,27 +1,24 @@
 package net.madicorp.smartinvestplus.web.rest;
 
+import com.codahale.metrics.annotation.Timed;
 import net.madicorp.smartinvestplus.security.jwt.JWTConfigurer;
 import net.madicorp.smartinvestplus.security.jwt.TokenProvider;
 import net.madicorp.smartinvestplus.web.rest.dto.LoginDTO;
-
-import java.util.Collections;
-
-import com.codahale.metrics.annotation.Timed;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
-import javax.servlet.http.HttpServletResponse;
-import javax.validation.Valid;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Response;
+import java.util.Collections;
 
-@RestController
-@RequestMapping("/api")
+@Component
+@Path("/api")
 public class UserJWTController {
 
     @Inject
@@ -30,9 +27,14 @@ public class UserJWTController {
     @Inject
     private AuthenticationManager authenticationManager;
 
-    @RequestMapping(value = "/authenticate", method = RequestMethod.POST)
+    @Path("/authenticate")
+    @POST
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+    @Produces(MediaType.APPLICATION_JSON_VALUE)
     @Timed
-    public ResponseEntity<?> authorize(@Valid @RequestBody LoginDTO loginDTO, HttpServletResponse response) {
+    public Response authorize(@FormParam("j_username") String username, @FormParam("j_password") String password,
+                              @FormParam("remember-me") Boolean rememberMe) {
+        LoginDTO loginDTO = login(username, password, rememberMe);
 
         UsernamePasswordAuthenticationToken authenticationToken =
             new UsernamePasswordAuthenticationToken(loginDTO.getUsername(), loginDTO.getPassword());
@@ -40,12 +42,21 @@ public class UserJWTController {
         try {
             Authentication authentication = this.authenticationManager.authenticate(authenticationToken);
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            boolean rememberMe = (loginDTO.isRememberMe() == null) ? false : loginDTO.isRememberMe();
-            String jwt = tokenProvider.createToken(authentication, rememberMe);
-            response.addHeader(JWTConfigurer.AUTHORIZATION_HEADER, "Bearer " + jwt);
-            return ResponseEntity.ok(new JWTToken(jwt));
+            String jwt = tokenProvider.createToken(authentication, loginDTO.isRememberMe());
+            return Response.ok(new JWTToken(jwt)).header(JWTConfigurer.AUTHORIZATION_HEADER, "Bearer " + jwt).build();
         } catch (AuthenticationException exception) {
-            return new ResponseEntity<>(Collections.singletonMap("AuthenticationException",exception.getLocalizedMessage()), HttpStatus.UNAUTHORIZED);
+            return Response.status(401)
+                           .entity(Collections.singletonMap("AuthenticationException", exception.getLocalizedMessage()))
+                           .build();
         }
+    }
+
+    private LoginDTO login(@FormParam("username") String username, @FormParam("password") String password,
+                           Boolean rememberMe) {
+        LoginDTO loginDTO = new LoginDTO();
+        loginDTO.setUsername(username);
+        loginDTO.setPassword(password);
+        loginDTO.setRememberMe(rememberMe != null ? rememberMe : false);
+        return loginDTO;
     }
 }

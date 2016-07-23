@@ -38,6 +38,9 @@ public class UserService {
     @Inject
     private AuthorityRepository authorityRepository;
 
+    @Inject
+    private SecurityUtils securityUtils;
+
     public Optional<User> activateRegistration(String key) {
         log.debug("Activating user for activation key {}", key);
         return userRepository.findOneByActivationKey(key)
@@ -133,7 +136,7 @@ public class UserService {
     }
 
     public void updateUserInformation(String firstName, String lastName, String email, String langKey) {
-        userRepository.findOneByLogin(SecurityUtils.getCurrentUserLogin()).ifPresent(u -> {
+        userRepository.findOneByLogin(securityUtils.getCurrentUserLogin()).ifPresent(u -> {
             u.setFirstName(firstName);
             u.setLastName(lastName);
             u.setEmail(email);
@@ -151,7 +154,7 @@ public class UserService {
     }
 
     public void changePassword(String password) {
-        userRepository.findOneByLogin(SecurityUtils.getCurrentUserLogin()).ifPresent(u -> {
+        userRepository.findOneByLogin(securityUtils.getCurrentUserLogin()).ifPresent(u -> {
             String encryptedPassword = passwordEncoder.encode(password);
             u.setPassword(encryptedPassword);
             userRepository.save(u);
@@ -166,16 +169,10 @@ public class UserService {
         });
     }
 
-    public User getUserWithAuthorities(String id) {
-        User user = userRepository.findOne(id);
-        user.getAuthorities().size(); // eagerly load the association
-        return user;
-    }
-
-    public User getUserWithAuthorities() {
-        User user = userRepository.findOneByLogin(SecurityUtils.getCurrentUserLogin()).get();
-        user.getAuthorities().size(); // eagerly load the association
-        return user;
+    public Optional<User> getUserWithAuthorities(String login) {
+        Optional<User> optUser = userRepository.findOneByLogin(login);
+        optUser.ifPresent(user -> user.getAuthorities().size());
+        return optUser;
     }
 
     /**

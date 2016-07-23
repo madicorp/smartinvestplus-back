@@ -1,6 +1,7 @@
 package net.madicorp.smartinvestplus.stockexchange.repository;
 
 import net.madicorp.smartinvestplus.config.DatabaseConfiguration;
+import net.madicorp.smartinvestplus.security.SecurityUtils;
 import net.madicorp.smartinvestplus.security.SpringSecurityAuditorAware;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,5 +36,10 @@ public class RepositoryTestConfig implements InitializingBean {
     @Bean
     public SpringSecurityAuditorAware springSecurityAuditorAware() {
         return new SpringSecurityAuditorAware();
+    }
+
+    @Bean
+    public SecurityUtils securityUtils() {
+        return new SecurityUtils();
     }
 }

@@ -6,20 +6,17 @@ import net.madicorp.smartinvestplus.stockexchange.service.CloseRateService;
 import net.madicorp.smartinvestplus.stockexchange.service.DivisionAlreadyExistsException;
 import net.madicorp.smartinvestplus.stockexchange.service.IncompleteDataHistoryException;
 import net.madicorp.smartinvestplus.stockexchange.service.StockExchangeService;
+import net.madicorp.smartinvestplus.web.rest.HttpUtil;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
+import javax.ws.rs.core.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Iterator;
@@ -31,6 +28,9 @@ public class SecuritiesResource {
 
     @Context
     private UriInfo uriInfo;
+
+    @Inject
+    private HttpUtil httpUtil;
 
     @Inject
     private StockExchangeService stockExchService;
@@ -45,13 +45,13 @@ public class SecuritiesResource {
      * @return JSONArray containing each stock exchange and the links to its securities
      */
     @GET
-    @Produces(MediaType.APPLICATION_JSON_VALUE)
+    @Produces(MediaType.APPLICATION_JSON)
     public JSONArray getSecurities(@PathParam("stock-exchange-symbol") String stockExchangeSymbol) {
         log.debug("REST request to get securities in stock exchange '{}'", stockExchangeSymbol);
         StockExchangeWithSecurities stockExchange =
             stockExchService.getStockExchange(stockExchangeSymbol)
                             .orElseThrow(() -> new StockExchangeNotFoundException(stockExchangeSymbol));
-        UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder().path("{securitySymbol}");
+        UriBuilder uriBuilder = httpUtil.getUriBuilder(uriInfo).path("{securitySymbol}");
         return stockExchange.getSecurities()
                             .stream()
                             .map(security -> this.buildSecurityJSON(security, uriBuilder))
@@ -67,7 +67,7 @@ public class SecuritiesResource {
      */
     @GET
     @Path("/{security-symbol}/")
-    @Produces(MediaType.APPLICATION_JSON_VALUE)
+    @Produces(MediaType.APPLICATION_JSON)
     public SecurityWithStockExchange getSecurity(@PathParam("stock-exchange-symbol") String stockExchangeSymbol,
                                                  @PathParam("security-symbol") String securitySymbol) {
         log.debug("REST request to get security '{}' in stock exchange '{}'", securitySymbol, stockExchangeSymbol);
@@ -95,7 +95,7 @@ public class SecuritiesResource {
 
     @Path("/{security-symbol}/close-rates/")
     @GET
-    @Produces(MediaType.APPLICATION_JSON_VALUE)
+    @Produces(MediaType.APPLICATION_JSON)
     public Iterator<CloseRate> getStockExchange(@PathParam("stock-exchange-symbol") String stockExchangeSymbol,
                                                 @PathParam("security-symbol") String securitySymbol) {
         log.debug("REST request to get close rates one month to date for security '{}' in stock exchange '{}'",
@@ -112,8 +112,8 @@ public class SecuritiesResource {
 
     @Path("/{security-symbol}/divisions/")
     @PUT
-    @Consumes(MediaType.APPLICATION_JSON_VALUE)
-    @Produces(MediaType.APPLICATION_JSON_VALUE)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     public Response create(@PathParam("stock-exchange-symbol") String stockExchangeSymbol,
                            @PathParam("security-symbol") String securitySymbol,
                            Division division) {
