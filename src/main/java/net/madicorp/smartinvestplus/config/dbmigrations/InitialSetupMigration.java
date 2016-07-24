@@ -34,8 +34,9 @@ import static net.madicorp.smartinvestplus.config.CommonDbConfiguration.jongoMap
  */
 @ChangeLog(order = "001")
 public class InitialSetupMigration {
-    private static final Authority ROLE_ADMIN = new Authority("ROLE_ADMIN");
-    private static final Authority ROLE_USER = new Authority("ROLE_USER");
+    private static final Authority ROLE_ADMIN = authority("ROLE_ADMIN");
+
+    private static final Authority ROLE_USER = authority("ROLE_USER");
 
     private final MustacheService mustacheService = new MustacheService();
 
@@ -173,5 +174,11 @@ public class InitialSetupMigration {
             user.setAuthorities(new HashSet<>(Arrays.asList(authorities)));
         }
         return user;
+    }
+
+    private static Authority authority(String role) {
+        Authority authority = new Authority();
+        authority.setName(role);
+        return authority;
     }
 }

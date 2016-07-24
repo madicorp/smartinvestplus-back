@@ -3,6 +3,7 @@ package net.madicorp.smartinvestplus.domain;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import net.madicorp.smartinvestplus.config.Constants;
 import org.hibernate.validator.constraints.Email;
+import org.jongo.marshall.jackson.oid.MongoId;
 import org.springframework.cloud.cloudfoundry.com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -24,6 +25,7 @@ public class User extends AbstractAuditingEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    @MongoId
     @Id
     private String id;
 
@@ -66,7 +68,6 @@ public class User extends AbstractAuditingEntity implements Serializable {
     @JsonProperty("reset_date")
     private ZonedDateTime resetDate = null;
 
-    @JsonIgnore
     private Set<Authority> authorities = new HashSet<>();
 
     public String getId() {
@@ -192,13 +193,13 @@ public class User extends AbstractAuditingEntity implements Serializable {
     @Override
     public String toString() {
         return "User{" +
-            "login='" + login + '\'' +
-            ", firstName='" + firstName + '\'' +
-            ", lastName='" + lastName + '\'' +
-            ", email='" + email + '\'' +
-            ", activated='" + activated + '\'' +
-            ", langKey='" + langKey + '\'' +
-            ", activationKey='" + activationKey + '\'' +
-            "}";
+               "login='" + login + '\'' +
+               ", firstName='" + firstName + '\'' +
+               ", lastName='" + lastName + '\'' +
+               ", email='" + email + '\'' +
+               ", activated='" + activated + '\'' +
+               ", langKey='" + langKey + '\'' +
+               ", activationKey='" + activationKey + '\'' +
+               "}";
     }
 }

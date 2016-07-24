@@ -1,31 +1,30 @@
 package net.madicorp.smartinvestplus.web.rest;
 
 import net.madicorp.smartinvestplus.config.JHipsterProperties;
+import org.springframework.core.env.Environment;
+import org.springframework.stereotype.Component;
 
+import javax.inject.Inject;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import javax.inject.Inject;
 
-import org.springframework.core.env.Environment;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
-
-@RestController
-@RequestMapping("/api")
+@Component
+@Path("/api/profile-info")
 public class ProfileInfoResource {
 
     @Inject
-    Environment env;
+    private Environment env;
 
     @Inject
     private JHipsterProperties jHipsterProperties;
 
-    @RequestMapping(value = "/profile-info",
-        method = RequestMethod.GET,
-        produces = MediaType.APPLICATION_JSON_VALUE)
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
     public ProfileInfoResponse getActiveProfiles() {
         return new ProfileInfoResponse(env.getActiveProfiles(), getRibbonEnv());
     }
@@ -53,9 +52,9 @@ public class ProfileInfoResource {
         public String[] activeProfiles;
         public String ribbonEnv;
 
-        ProfileInfoResponse(String[] activeProfiles,String ribbonEnv) {
-            this.activeProfiles=activeProfiles;
-            this.ribbonEnv=ribbonEnv;
+        ProfileInfoResponse(String[] activeProfiles, String ribbonEnv) {
+            this.activeProfiles = activeProfiles;
+            this.ribbonEnv = ribbonEnv;
         }
     }
 }

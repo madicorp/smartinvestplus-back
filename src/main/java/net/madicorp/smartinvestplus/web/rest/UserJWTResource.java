@@ -14,12 +14,13 @@ import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;
+import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 import java.util.Collections;
 
 @Component
 @Path("/api")
-public class UserJWTController {
+public class UserJWTResource {
 
     @Inject
     private TokenProvider tokenProvider;
@@ -43,7 +44,9 @@ public class UserJWTController {
             Authentication authentication = this.authenticationManager.authenticate(authenticationToken);
             SecurityContextHolder.getContext().setAuthentication(authentication);
             String jwt = tokenProvider.createToken(authentication, loginDTO.isRememberMe());
-            return Response.ok(new JWTToken(jwt)).header(JWTConfigurer.AUTHORIZATION_HEADER, "Bearer " + jwt).build();
+            return Response.ok(new JWTToken(jwt))
+                           .cookie(new NewCookie(JWTConfigurer.COOKIE_NAME, jwt))
+                           .build();
         } catch (AuthenticationException exception) {
             return Response.status(401)
                            .entity(Collections.singletonMap("AuthenticationException", exception.getLocalizedMessage()))

@@ -1,9 +1,7 @@
 package net.madicorp.smartinvestplus.config;
 
 import net.madicorp.smartinvestplus.security.AuthoritiesConstants;
-import net.madicorp.smartinvestplus.security.Http401UnauthorizedEntryPoint;
-import net.madicorp.smartinvestplus.security.jwt.JWTConfigurer;
-import net.madicorp.smartinvestplus.security.jwt.TokenProvider;
+import net.madicorp.smartinvestplus.security.jwt.JWTAuthenticationEntryPoint;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -27,13 +25,10 @@ import javax.inject.Inject;
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     @Inject
-    private Http401UnauthorizedEntryPoint authenticationEntryPoint;
+    private JWTAuthenticationEntryPoint authenticationEntryPoint;
 
     @Inject
     private UserDetailsService userDetailsService;
-
-    @Inject
-    private TokenProvider tokenProvider;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -42,8 +37,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     @Inject
     public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
-        auth
-            .userDetailsService(userDetailsService)
+        auth.userDetailsService(userDetailsService)
             .passwordEncoder(passwordEncoder());
     }
 
@@ -61,8 +55,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http
-            .exceptionHandling()
+        http.exceptionHandling()
             .authenticationEntryPoint(authenticationEntryPoint)
             .and()
             .csrf()
@@ -85,14 +78,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
             .antMatchers("/management/**").hasAuthority(AuthoritiesConstants.ADMIN)
             .antMatchers("/v2/api-docs/**").permitAll()
             .antMatchers("/configuration/ui").permitAll()
-            .antMatchers("/swagger-ui/index.html").hasAuthority(AuthoritiesConstants.ADMIN)
-            .and()
-            .apply(securityConfigurerAdapter());
-
-    }
-
-    private JWTConfigurer securityConfigurerAdapter() {
-        return new JWTConfigurer(tokenProvider);
+            .antMatchers("/swagger-ui/index.html").hasAuthority(AuthoritiesConstants.ADMIN);
     }
 
     @Bean

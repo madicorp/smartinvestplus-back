@@ -190,8 +190,7 @@ public class UserResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Timed
-    public Response getAllUsers(@QueryParam("page") int page,
-                                @QueryParam("size") int size)
+    public Response getAllUsers(@QueryParam("page") int page, @QueryParam("size") int size)
         throws URISyntaxException {
         Page<User> userPage = userRepository.findAll(new PageRequest(page, size));
         List<ManagedUserDTO> managedUserDTOs = userPage.getContent().stream()
