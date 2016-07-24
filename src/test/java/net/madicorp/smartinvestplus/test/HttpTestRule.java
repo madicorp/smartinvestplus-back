@@ -1,6 +1,5 @@
 package net.madicorp.smartinvestplus.test;
 
-import net.madicorp.smartinvestplus.web.rest.dto.ManagedUserDTO;
 import org.junit.ClassRule;
 import org.junit.rules.ExternalResource;
 import org.junit.runner.Description;
@@ -9,7 +8,6 @@ import org.springframework.boot.test.SpringApplicationConfiguration;
 
 import javax.inject.Inject;
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -40,8 +38,9 @@ public class HttpTestRule extends ExternalResource {
     }
 
     private HttpTestHelperBuilder.HttpTestHelper getHttpTestHelper() {
-        SpringApplicationConfiguration testConfigAnnotation = description.getAnnotation(SpringApplicationConfiguration.class);
-        if(testConfigAnnotation == null) {
+        SpringApplicationConfiguration testConfigAnnotation = description
+            .getAnnotation(SpringApplicationConfiguration.class);
+        if (testConfigAnnotation == null) {
             throw new HttpTestException("No HttpTestConfig has been provided");
         }
         return HttpTestHelperBuilder.builder(testConfigAnnotation::value).build();
@@ -49,7 +48,7 @@ public class HttpTestRule extends ExternalResource {
 
     private void checkThatIAmAClassRule() {
         for (Field field : description.getTestClass().getFields()) {
-            if(!HttpTestRule.class.equals(field.getType())) {
+            if (!HttpTestRule.class.equals(field.getType())) {
                 continue;
             }
             if (field.getAnnotation(ClassRule.class) == null) {
@@ -67,7 +66,7 @@ public class HttpTestRule extends ExternalResource {
             }
 
             Object bean = httpTestHelper.context().getBean(field.getType());
-            if(!Modifier.isStatic(field.getModifiers())) {
+            if (!Modifier.isStatic(field.getModifiers())) {
                 throw new HttpTestException("Inject annotation must be used on static fields");
             }
             field.setAccessible(true);
@@ -82,10 +81,6 @@ public class HttpTestRule extends ExternalResource {
         } catch (Exception e) {
             throw new TearDownException(e);
         }
-    }
-
-    public WebTarget target(String path) {
-        return httpTestHelper.target(path);
     }
 
     public Response get(String path) {

@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
+import java.net.URI;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Iterator;
@@ -24,6 +25,7 @@ import java.util.Iterator;
 @Component
 @Path("/api/stock-exchanges/{stock-exchange-symbol}/securities/")
 public class SecuritiesResource {
+    private static final DateTimeFormatter URI_DATE_FORMATTER = DateTimeFormatter.BASIC_ISO_DATE;
     private final Logger log = LoggerFactory.getLogger(SecuritiesResource.class);
 
     @Context
@@ -117,17 +119,33 @@ public class SecuritiesResource {
     public Response create(@PathParam("stock-exchange-symbol") String stockExchangeSymbol,
                            @PathParam("security-symbol") String securitySymbol,
                            Division division) {
-        log.debug("REST request to create close rates division for security '{}' in stock exchange '{}' at '{}' to apply {} rate",
-                  securitySymbol, stockExchangeSymbol, division.getDate().format(DateTimeFormatter.ISO_DATE),
-                  division.getRate());
+        LocalDate divisionDate = division.getDate();
+        log.debug(
+            "REST request to create close rates division for security '{}' in stock exchange '{}' at '{}' to apply {} rate",
+            securitySymbol, stockExchangeSymbol, divisionDate.format(DateTimeFormatter.ISO_DATE),
+            division.getRate());
         SecurityWithStockExchange security = getSecurityWithStockExchange(stockExchangeSymbol, securitySymbol);
         try {
-            return Response.status(Response.Status.CREATED)
+            URI divisionUri = httpUtil.getUriBuilder(uriInfo)
+                                      .path("{division-date}")
+                                      .build(divisionDate.format(URI_DATE_FORMATTER));
+            return Response.created(divisionUri)
                            .entity(stockExchService.addDivision(security, division))
                            .build();
         } catch (DivisionAlreadyExistsException e) {
             throw new BadRequestException("Should not add a division that already exists");
         }
+    }
+
+    @Path("/{security-symbol}/divisions/{division-date}")
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public Division create(@PathParam("stock-exchange-symbol") String stockExchangeSymbol,
+                           @PathParam("security-symbol") String securitySymbol,
+                           @PathParam("division-date") String formattedDivisionDate) {
+        LocalDate divisionDate = LocalDate.parse(formattedDivisionDate, URI_DATE_FORMATTER);
+        return stockExchService.getDivision(stockExchangeSymbol, securitySymbol, divisionDate)
+                               .orElseThrow(NotFoundException::new);
     }
 
     private SecurityWithStockExchange getSecurityWithStockExchange(String stockExchangeSymbol, String securitySymbol) {

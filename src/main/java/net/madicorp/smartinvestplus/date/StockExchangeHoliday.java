@@ -12,6 +12,9 @@ import java.time.LocalDate;
  */
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @ToString
 @EqualsAndHashCode(of = {"stockExchangeSymbol", "date"})
 public class StockExchangeHoliday {

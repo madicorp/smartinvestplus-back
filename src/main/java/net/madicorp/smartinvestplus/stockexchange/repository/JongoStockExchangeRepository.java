@@ -1,5 +1,6 @@
 package net.madicorp.smartinvestplus.stockexchange.repository;
 
+import com.mongodb.DBObject;
 import net.madicorp.smartinvestplus.date.StockExchangeHoliday;
 import net.madicorp.smartinvestplus.stockexchange.domain.Division;
 import net.madicorp.smartinvestplus.stockexchange.domain.SecurityWithStockExchange;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import javax.inject.Inject;
 import java.time.LocalDate;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.Spliterators;
@@ -148,5 +150,46 @@ public class JongoStockExchangeRepository implements StockExchangeRepository {
         return StreamSupport.stream(Spliterators.spliteratorUnknownSize(holidays, Spliterator.ORDERED), true)
                             .map(StockExchangeHoliday::getDate)
                             .collect(Collectors.toSet());
+    }
+
+    @Override
+    public boolean containsHoliday(String stockExchangeSymbol, LocalDate holiday) {
+        return jongo.getCollection("stock_exchange")
+                    .find("{" +
+                          "     '_id': #," +
+                          "     'holidays': #" +
+                          "}", stockExchangeSymbol, holiday)
+                    .as(DBObject.class)
+                    .hasNext();
+    }
+
+    @Override
+    public Optional<Division> getDivision(String stockExchangeSymbol, String securitySymbol, LocalDate divisionDate) {
+        Aggregate.ResultsIterator<Division> division = jongo.getCollection("stock_exchange")
+                                                            .aggregate("{" +
+                                                                       "    $unwind: '$securities'" +
+                                                                       "}")
+                                                            .and("{" +
+                                                                 "   $match: {" +
+                                                                 "       'securities._id': #," +
+                                                                 "       '_id': #" +
+                                                                 "   }" +
+                                                                 "}", securitySymbol, stockExchangeSymbol)
+                                                            .and("{" +
+                                                                 "    $unwind: '$securities.divisions'" +
+                                                                 "}")
+                                                            .and("{" +
+                                                                 "   $match: {" +
+                                                                 "       'securities.divisions.date': #" +
+                                                                 "   }" +
+                                                                 "}", divisionDate)
+                                                            .and("{" +
+                                                                 "   $project: {" +
+                                                                 "       'date': '$securities.divisions.date'," +
+                                                                 "       'rate': '$securities.divisions.rate'" +
+                                                                 "   }" +
+                                                                 "}")
+                                                            .as(Division.class);
+        return division.hasNext() ? Optional.of(division.next()) : Optional.empty();
     }
 }
