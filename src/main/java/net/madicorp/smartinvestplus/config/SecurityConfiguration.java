@@ -1,7 +1,9 @@
 package net.madicorp.smartinvestplus.config;
 
 import net.madicorp.smartinvestplus.security.AuthoritiesConstants;
-import net.madicorp.smartinvestplus.security.jwt.JWTAuthenticationEntryPoint;
+import net.madicorp.smartinvestplus.security.Http401UnauthorizedEntryPoint;
+import net.madicorp.smartinvestplus.security.jwt.JWTFilter;
+import net.madicorp.smartinvestplus.security.jwt.TokenProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -16,6 +18,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.data.repository.query.SecurityEvaluationContextExtension;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import javax.inject.Inject;
 
@@ -25,10 +28,13 @@ import javax.inject.Inject;
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     @Inject
-    private JWTAuthenticationEntryPoint authenticationEntryPoint;
+    private Http401UnauthorizedEntryPoint authenticationEntryPoint;
 
     @Inject
     private UserDetailsService userDetailsService;
+
+    @Inject
+    private TokenProvider tokenProvider;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -67,22 +73,33 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
             .sessionManagement()
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             .and()
+            .addFilterBefore(jwtFilter(), UsernamePasswordAuthenticationFilter.class)
             .authorizeRequests()
-            .antMatchers("/api/register").permitAll()
-            .antMatchers("/api/activate").permitAll()
-            .antMatchers("/api/authenticate").permitAll()
-            .antMatchers("/api/account/password/reset/init").permitAll()
-            .antMatchers("/api/account/password/reset/finish").permitAll()
-            .antMatchers("/api/profile-info").permitAll()
+            .antMatchers(nonAuthenticatedUrls()).permitAll()
             .antMatchers("/api/**").authenticated()
             .antMatchers("/management/**").hasAuthority(AuthoritiesConstants.ADMIN)
-            .antMatchers("/v2/api-docs/**").permitAll()
-            .antMatchers("/configuration/ui").permitAll()
             .antMatchers("/swagger-ui/index.html").hasAuthority(AuthoritiesConstants.ADMIN);
+    }
+
+    @Bean
+    public JWTFilter jwtFilter() {
+        return new JWTFilter(tokenProvider, nonAuthenticatedUrls());
     }
 
     @Bean
     public SecurityEvaluationContextExtension securityEvaluationContextExtension() {
         return new SecurityEvaluationContextExtension();
+    }
+
+    private String[] nonAuthenticatedUrls() {
+        return new String[]{
+            "/api/register",
+            "/api/activate",
+            "/api/authenticate",
+            "/api/account/password/reset/**",
+            "/api/profile-info",
+            "/v2/api-docs/**",
+            "/configuration/ui"
+        };
     }
 }

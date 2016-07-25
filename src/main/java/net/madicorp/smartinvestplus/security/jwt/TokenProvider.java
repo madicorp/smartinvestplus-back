@@ -24,15 +24,15 @@ import java.util.stream.Collectors;
 @Component
 public class TokenProvider {
 
+    public final static String JWT_COOKIE_NAME = "JWT";
+
     private final Logger log = LoggerFactory.getLogger(TokenProvider.class);
 
     private static final String AUTHORITIES_KEY = "auth";
 
     private String secretKey;
 
-    private long tokenValidityInSeconds;
-
-    private long tokenValidityInSecondsForRememberMe;
+    private int tokenValidityInSeconds;
 
     @Inject
     private JHipsterProperties jHipsterProperties;
@@ -41,27 +41,19 @@ public class TokenProvider {
     public void init() {
         this.secretKey =
             jHipsterProperties.getSecurity().getAuthentication().getJwt().getSecret();
-
         this.tokenValidityInSeconds =
-            1000 * jHipsterProperties.getSecurity().getAuthentication().getJwt().getTokenValidityInSeconds();
-        this.tokenValidityInSecondsForRememberMe =
             1000 *
-            jHipsterProperties.getSecurity().getAuthentication().getJwt().getTokenValidityInSecondsForRememberMe();
+            jHipsterProperties.getSecurity().getAuthentication().getJwt().getTokenValidityInSeconds();
     }
 
-    public String createToken(Authentication authentication, Boolean rememberMe) {
+    public String createToken(Authentication authentication) {
         String authorities = authentication.getAuthorities()
                                            .stream()
                                            .map(GrantedAuthority::getAuthority)
                                            .collect(Collectors.joining(","));
 
         long now = (new Date()).getTime();
-        Date validity;
-        if (rememberMe) {
-            validity = new Date(now + this.tokenValidityInSecondsForRememberMe);
-        } else {
-            validity = new Date(now + this.tokenValidityInSeconds);
-        }
+        Date validity = new Date(now + this.tokenValidityInSeconds);
 
         return Jwts.builder()
                    .setSubject(authentication.getName())
@@ -78,9 +70,8 @@ public class TokenProvider {
                             .getBody();
 
         Collection<? extends GrantedAuthority> authorities =
-            Arrays.asList(claims.get(AUTHORITIES_KEY).toString().split(","))
-                  .stream()
-                  .map(authority -> new SimpleGrantedAuthority(authority))
+            Arrays.stream(claims.get(AUTHORITIES_KEY).toString().split(","))
+                  .map(SimpleGrantedAuthority::new)
                   .collect(Collectors.toList());
 
         User principal = new User(claims.getSubject(), "", authorities);

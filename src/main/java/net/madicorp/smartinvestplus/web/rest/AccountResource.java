@@ -124,6 +124,20 @@ public class AccountResource {
     }
 
     /**
+     * GET  /current-account/: get current user
+     *
+     * @return the Response with status 200 (OK) and the current user in body, or status 500 (Internal Server Error) if the user couldn't be returned
+     */
+    @GET
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Path("/current-account/")
+    @Timed
+    public Response getCurrentAccount() {
+        return doGetAccount(securityUtils.getCurrentUserLogin());
+    }
+
+    /**
      * GET  /accounts/{login} : get user with login in path.
      *
      * @return the Response with status 200 (OK) and the current user in body, or status 500 (Internal Server Error) if the user couldn't be returned
@@ -134,6 +148,10 @@ public class AccountResource {
     @Path("/accounts/{login}")
     @Timed
     public Response getAccount(@PathParam("login") String login) {
+        return doGetAccount(login);
+    }
+
+    private Response doGetAccount(String login) {
         if (isForbiddenToChangeUserResource(login)) {
             return forbidden();
         }
