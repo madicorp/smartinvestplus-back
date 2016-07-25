@@ -48,8 +48,8 @@ public class InitialSetupMigrationTest {
         // THEN
         Jongo jongo = jongo();
         MongoCursor<Authority> authorities = jongo.getCollection("sip_authority").find().as(Authority.class);
-        Assertions.assertThat((Iterable<Authority>) authorities).containsOnly(new Authority("ROLE_ADMIN"),
-                                                                              new Authority("ROLE_USER"));
+        Assertions.assertThat((Iterable<Authority>) authorities).containsOnly(authority("ROLE_ADMIN"),
+                                                                              authority("ROLE_USER"));
     }
 
     @Test
@@ -118,6 +118,12 @@ public class InitialSetupMigrationTest {
 
     private Jongo jongo() {
         return new Jongo(db, jongoMapper());
+    }
+
+    private Authority authority(String role) {
+        Authority authority = new Authority();
+        authority.setName(role);
+        return authority;
     }
 
 }

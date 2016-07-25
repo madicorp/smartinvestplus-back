@@ -1,10 +1,11 @@
 package net.madicorp.smartinvestplus.domain;
 
 
-import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
+import org.jongo.marshall.jackson.oid.MongoId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
@@ -13,14 +14,14 @@ import java.io.Serializable;
  * An authority (a security role) used by Spring Security.
  */
 @Document(collection = "sip_authority")
-@AllArgsConstructor
 @NoArgsConstructor
 public class Authority implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     @NotNull
-    @Size(min = 0, max = 50)
+    @Size(min = 1, max = 50)
+    @MongoId
     @Id
     private String name;
 
@@ -58,7 +59,7 @@ public class Authority implements Serializable {
     @Override
     public String toString() {
         return "Authority{" +
-            "name='" + name + '\'' +
-            "}";
+               "name='" + name + '\'' +
+               "}";
     }
 }

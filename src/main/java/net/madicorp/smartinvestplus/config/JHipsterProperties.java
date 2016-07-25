@@ -170,8 +170,7 @@ public class JHipsterProperties {
 
                 private String secret;
 
-                private long tokenValidityInSeconds = 1800;
-                private long tokenValidityInSecondsForRememberMe = 2592000;
+                private int tokenValidityInSeconds = 2592000;
 
                 public String getSecret() {
                     return secret;
@@ -181,20 +180,12 @@ public class JHipsterProperties {
                     this.secret = secret;
                 }
 
-                public long getTokenValidityInSeconds() {
+                public int getTokenValidityInSeconds() {
                     return tokenValidityInSeconds;
                 }
 
-                public void setTokenValidityInSeconds(long tokenValidityInSeconds) {
+                public void setTokenValidityInSeconds(int tokenValidityInSeconds) {
                     this.tokenValidityInSeconds = tokenValidityInSeconds;
-                }
-
-                public long getTokenValidityInSecondsForRememberMe() {
-                    return tokenValidityInSecondsForRememberMe;
-                }
-
-                public void setTokenValidityInSecondsForRememberMe(long tokenValidityInSecondsForRememberMe) {
-                    this.tokenValidityInSecondsForRememberMe = tokenValidityInSecondsForRememberMe;
                 }
             }
         }
@@ -489,10 +480,10 @@ public class JHipsterProperties {
         public String[] getDisplayOnActiveProfiles() {
             return displayOnActiveProfiles;
         }
-        
+
         public void setDisplayOnActiveProfiles(String[] displayOnActiveProfiles) {
             this.displayOnActiveProfiles = displayOnActiveProfiles;
         }
-    }  
+    }
 
 }

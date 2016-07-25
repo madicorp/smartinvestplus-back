@@ -23,7 +23,7 @@ public class ResponseAssertion extends AbstractAssert<ResponseAssertion, Respons
         return new ResponseAssertion(actual);
     }
 
-    public ResponseAssertion success() {
+    public ResponseAssertion ok() {
         isNotNull();
         return statusEquals(200);
     }
@@ -41,6 +41,11 @@ public class ResponseAssertion extends AbstractAssert<ResponseAssertion, Respons
     public ResponseAssertion badRequest() {
         isNotNull();
         return statusEquals(400);
+    }
+
+    public ResponseAssertion noContent() {
+        statusEquals(204);
+        return this;
     }
 
     private ResponseAssertion statusEquals(int statusCode) {

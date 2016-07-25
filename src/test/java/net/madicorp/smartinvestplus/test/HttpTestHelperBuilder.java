@@ -16,27 +16,27 @@ import java.util.function.Supplier;
  * Date: 05/07/2016
  * Time: 21:49
  */
-public class HttpTestHelperBuilder {
-    private final Supplier<Class> configurationClassSupplier;
+class HttpTestHelperBuilder {
+    private final Supplier<Class[]> configurationClassesSupplier;
 
-    private HttpTestHelperBuilder(Supplier<Class> configurationClassSupplier) {
-        this.configurationClassSupplier = configurationClassSupplier;
+    private HttpTestHelperBuilder(Supplier<Class[]> configurationClassesSupplier) {
+        this.configurationClassesSupplier = configurationClassesSupplier;
     }
 
-    public static HttpTestHelperBuilder builder(Supplier<Class> configurationClassSupplier) {
-        return new HttpTestHelperBuilder(configurationClassSupplier);
+    static HttpTestHelperBuilder builder(Supplier<Class[]> configurationClassesSupplier) {
+        return new HttpTestHelperBuilder(configurationClassesSupplier);
     }
 
-    public HttpTestHelper build() {
+    HttpTestHelper build() {
         return new HttpTestHelper();
     }
 
-    public class HttpTestHelper extends JerseyTest {
+    class HttpTestHelper extends JerseyTest {
         private ApplicationContext context;
 
         @Override
         protected Application configure() {
-            context = new AnnotationConfigApplicationContext(configurationClassSupplier.get());
+            context = new AnnotationConfigApplicationContext(configurationClassesSupplier.get());
             return new JerseyConfig()
                 .property(ServerProperties.PROVIDER_CLASSNAMES, JerseyMapperProvider.class.getCanonicalName())
                 .property("contextConfig", context);
