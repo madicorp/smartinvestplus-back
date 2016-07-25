@@ -6,15 +6,17 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 
 /**
  * Utility class for Spring Security.
  */
-public final class SecurityUtils {
+@Component
+public class SecurityUtils {
 
-    private SecurityUtils() {
+    public SecurityUtils() {
     }
 
     /**
@@ -22,7 +24,7 @@ public final class SecurityUtils {
      *
      * @return the login of the current user
      */
-    public static String getCurrentUserLogin() {
+    public String getCurrentUserLogin() {
         SecurityContext securityContext = SecurityContextHolder.getContext();
         Authentication authentication = securityContext.getAuthentication();
         String userName = null;
@@ -42,7 +44,7 @@ public final class SecurityUtils {
      *
      * @return true if the user is authenticated, false otherwise
      */
-    public static boolean isAuthenticated() {
+    public boolean isAuthenticated() {
         SecurityContext securityContext = SecurityContextHolder.getContext();
         Collection<? extends GrantedAuthority> authorities = securityContext.getAuthentication().getAuthorities();
         if (authorities != null) {
@@ -63,7 +65,7 @@ public final class SecurityUtils {
      * @param authority the authorithy to check
      * @return true if the current user has the authority, false otherwise
      */
-    public static boolean isCurrentUserInRole(String authority) {
+    public boolean isCurrentUserInRole(String authority) {
         SecurityContext securityContext = SecurityContextHolder.getContext();
         Authentication authentication = securityContext.getAuthentication();
         if (authentication != null) {

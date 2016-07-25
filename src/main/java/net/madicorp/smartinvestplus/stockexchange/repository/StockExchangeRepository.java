@@ -4,6 +4,7 @@ import net.madicorp.smartinvestplus.stockexchange.domain.Division;
 import net.madicorp.smartinvestplus.stockexchange.domain.SecurityWithStockExchange;
 
 import java.time.LocalDate;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -21,4 +22,8 @@ public interface StockExchangeRepository {
     void addHoliday(String stockExchangeSymbol, LocalDate holiday);
 
     Set<LocalDate> getHolidays(String stockExchangeSymbol);
+
+    boolean containsHoliday(String stockExchangeSymbol, LocalDate holiday);
+
+    Optional<Division> getDivision(String stockExchangeSymbol, String securitySymbol, LocalDate divisionDate);
 }

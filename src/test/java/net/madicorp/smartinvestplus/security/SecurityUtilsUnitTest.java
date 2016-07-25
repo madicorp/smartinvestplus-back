@@ -18,13 +18,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 * @see SecurityUtils
 */
 public class SecurityUtilsUnitTest {
+    private final SecurityUtils securityUtils = new SecurityUtils();
 
     @Test
     public void testgetCurrentUserLogin() {
         SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
         securityContext.setAuthentication(new UsernamePasswordAuthenticationToken("admin", "admin"));
         SecurityContextHolder.setContext(securityContext);
-        String login = SecurityUtils.getCurrentUserLogin();
+        String login = securityUtils.getCurrentUserLogin();
         assertThat(login).isEqualTo("admin");
     }
 
@@ -33,7 +34,7 @@ public class SecurityUtilsUnitTest {
         SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
         securityContext.setAuthentication(new UsernamePasswordAuthenticationToken("admin", "admin"));
         SecurityContextHolder.setContext(securityContext);
-        boolean isAuthenticated = SecurityUtils.isAuthenticated();
+        boolean isAuthenticated = securityUtils.isAuthenticated();
         assertThat(isAuthenticated).isTrue();
     }
 
@@ -44,7 +45,7 @@ public class SecurityUtilsUnitTest {
         authorities.add(new SimpleGrantedAuthority(AuthoritiesConstants.ANONYMOUS));
         securityContext.setAuthentication(new UsernamePasswordAuthenticationToken("anonymous", "anonymous", authorities));
         SecurityContextHolder.setContext(securityContext);
-        boolean isAuthenticated = SecurityUtils.isAuthenticated();
+        boolean isAuthenticated = securityUtils.isAuthenticated();
         assertThat(isAuthenticated).isFalse();
     }
 }

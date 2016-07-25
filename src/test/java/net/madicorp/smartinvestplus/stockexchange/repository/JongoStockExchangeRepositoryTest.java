@@ -16,6 +16,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.time.LocalDate;
 import java.time.Month;
+import java.util.Optional;
 
 import static com.lordofthejars.nosqlunit.mongodb.MongoDbConfigurationBuilder.mongoDb;
 import static net.madicorp.smartinvestplus.stockexchange.StockExchangeMockData.division;
@@ -98,21 +99,22 @@ public class JongoStockExchangeRepositoryTest {
     public void should_get_inserted_divisions() throws Exception {
         // GIVEN
         SecurityWithStockExchange security = security(2);
-        Division division = division(LocalDate.of(2016, 7, 9), .8);
-        subject.addDivision(security.getStockExchange().getSymbol(), security.getSymbol(), division);
+        LocalDate july72016 = LocalDate.of(2016, 7, 9);
+        Division division = division(july72016, .8);
+        String stockExchangeSymbol = security.getStockExchange().getSymbol();
+        String securitySymbol = security.getSymbol();
+        subject.addDivision(stockExchangeSymbol, securitySymbol, division);
         division = division(LocalDate.of(2016, 7, 10), .7);
-        subject.addDivision(security.getStockExchange().getSymbol(), security.getSymbol(), division);
+        subject.addDivision(stockExchangeSymbol, securitySymbol, division);
         division = division(LocalDate.of(2016, 7, 8), .6);
-        subject.addDivision(security.getStockExchange().getSymbol(), security.getSymbol(), division);
+        subject.addDivision(stockExchangeSymbol, securitySymbol, division);
 
         // WHEN
-        Iterable<Division> actual =
-            subject
-                .getDivisions(security.getStockExchange().getSymbol(), security.getSymbol(), LocalDate.of(2016, 7, 9));
+        Iterable<Division> actual = subject.getDivisions(stockExchangeSymbol, securitySymbol, july72016);
 
         // THEN
         Assertions.assertThat(actual)
-                  .containsOnly(division(LocalDate.of(2016, 7, 9), .8), division(LocalDate.of(2016, 7, 8), .6));
+                  .containsOnly(division(july72016, .8), division(LocalDate.of(2016, 7, 8), .6));
     }
 
     @Test
@@ -125,5 +127,47 @@ public class JongoStockExchangeRepositoryTest {
 
         // THEN;
         Assertions.assertThat(subject.getHolidays("BRVM")).containsOnly(july62016);
+    }
+
+    @Test
+    public void should_be_able_to_tell_if_stock_exchange_has_given_holiday() throws Exception {
+        // GIVEN
+        LocalDate july62016 = LocalDate.of(2016, Month.JULY, 6);
+        subject.addHoliday("BRVM", july62016);
+
+        // WHEN
+        boolean actual = subject.containsHoliday("BRVM", july62016);
+
+        // THEN;
+        Assertions.assertThat(actual).isTrue();
+    }
+
+    @Test
+    @UsingDataSet(locations = "/data/stock_exchanges.json", loadStrategy = LoadStrategyEnum.CLEAN_INSERT)
+    public void should_get_existing_division() throws Exception {
+        // GIVEN
+        SecurityWithStockExchange security = security();
+        LocalDate divisionDate = LocalDate.of(2016, 7, 10);
+        Division division = division(divisionDate, .7);
+        subject.addDivision(security.getStockExchange().getSymbol(), security.getSymbol(), division);
+
+        // WHEN
+        Optional<Division> actual = subject.getDivision("BRVM", "sec_1", divisionDate);
+
+        // THEN
+        Assertions.assertThat(actual).contains(division);
+    }
+
+    @Test
+    @UsingDataSet(locations = "/data/stock_exchanges.json", loadStrategy = LoadStrategyEnum.CLEAN_INSERT)
+    public void should_return_empty_optional_if_does_not_contain_given_division() throws Exception {
+        // GIVEN
+        LocalDate divisionDate = LocalDate.of(2016, 7, 10);
+
+        // WHEN
+        Optional<Division> actual = subject.getDivision("BRVM", "sec_1", divisionDate);
+
+        // THEN
+        Assertions.assertThat(actual).isEmpty();
     }
 }

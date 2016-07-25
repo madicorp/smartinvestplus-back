@@ -4,8 +4,11 @@ import org.junit.ClassRule;
 import org.junit.rules.ExternalResource;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
+import org.springframework.boot.test.SpringApplicationConfiguration;
 
-import javax.ws.rs.client.WebTarget;
+import javax.inject.Inject;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.Response;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
@@ -35,8 +38,9 @@ public class HttpTestRule extends ExternalResource {
     }
 
     private HttpTestHelperBuilder.HttpTestHelper getHttpTestHelper() {
-        HttpTestConfig testConfigAnnotation = description.getAnnotation(HttpTestConfig.class);
-        if(testConfigAnnotation == null) {
+        SpringApplicationConfiguration testConfigAnnotation = description
+            .getAnnotation(SpringApplicationConfiguration.class);
+        if (testConfigAnnotation == null) {
             throw new HttpTestException("No HttpTestConfig has been provided");
         }
         return HttpTestHelperBuilder.builder(testConfigAnnotation::value).build();
@@ -44,7 +48,7 @@ public class HttpTestRule extends ExternalResource {
 
     private void checkThatIAmAClassRule() {
         for (Field field : description.getTestClass().getFields()) {
-            if(!HttpTestRule.class.equals(field.getType())) {
+            if (!HttpTestRule.class.equals(field.getType())) {
                 continue;
             }
             if (field.getAnnotation(ClassRule.class) == null) {
@@ -56,14 +60,14 @@ public class HttpTestRule extends ExternalResource {
     private void initBeans(Description description) throws Exception {
         Class testClass = description.getTestClass();
         for (Field field : testClass.getDeclaredFields()) {
-            HttpTestInjectBean injectBeanAnnotation = field.getAnnotation(HttpTestInjectBean.class);
+            Inject injectBeanAnnotation = field.getAnnotation(Inject.class);
             if (injectBeanAnnotation == null) {
                 continue;
             }
 
             Object bean = httpTestHelper.context().getBean(field.getType());
-            if(!Modifier.isStatic(field.getModifiers())) {
-                throw new HttpTestException("HttpTestInjectBean must be used on static fields");
+            if (!Modifier.isStatic(field.getModifiers())) {
+                throw new HttpTestException("Inject annotation must be used on static fields");
             }
             field.setAccessible(true);
             field.set(testClass, bean);
@@ -79,7 +83,15 @@ public class HttpTestRule extends ExternalResource {
         }
     }
 
-    public WebTarget target(String path) {
-        return httpTestHelper.target(path);
+    public Response get(String path) {
+        return httpTestHelper.target(path).request().get();
+    }
+
+    public Response put(String path, Entity<?> entity) {
+        return httpTestHelper.target(path).request().put(entity);
+    }
+
+    public Response post(String path, Entity<?> entity) {
+        return httpTestHelper.target(path).request().post(entity);
     }
 }
