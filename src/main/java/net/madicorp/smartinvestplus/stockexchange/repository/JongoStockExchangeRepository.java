@@ -24,11 +24,13 @@ import java.util.stream.StreamSupport;
  */
 @Repository("stockExchangeRepository")
 public class JongoStockExchangeRepository implements StockExchangeRepository {
+    public static final String STOCK_EXCHANGES = "stock_exchanges";
+
     @Inject
     private Jongo jongo;
 
     public SecurityWithStockExchange findSecurity(String stockExchangeSymbol, String securitySymbol) {
-        return jongo.getCollection("stock_exchange")
+        return jongo.getCollection(STOCK_EXCHANGES)
                     .aggregate("{" +
                                "    $unwind: '$securities'" +
                                "}")
@@ -55,7 +57,7 @@ public class JongoStockExchangeRepository implements StockExchangeRepository {
 
     @Override
     public void addDivision(String stockExchangeSymbol, String securitySymbol, Division division) {
-        jongo.getCollection("stock_exchange")
+        jongo.getCollection(STOCK_EXCHANGES)
              .update(
                  "{" +
                  "   '_id': #," +
@@ -77,7 +79,7 @@ public class JongoStockExchangeRepository implements StockExchangeRepository {
 
     @Override
     public Iterable<Division> getDivisions(String stockExchangeSymbol, String securitySymbol, LocalDate to) {
-        return jongo.getCollection("stock_exchange")
+        return jongo.getCollection(STOCK_EXCHANGES)
                     .aggregate("{" +
                                "    $unwind: '$securities'" +
                                "}")
@@ -108,7 +110,7 @@ public class JongoStockExchangeRepository implements StockExchangeRepository {
 
     @Override
     public void addHoliday(String stockExchangeSymbol, LocalDate holiday) {
-        jongo.getCollection("stock_exchange")
+        jongo.getCollection(STOCK_EXCHANGES)
              .update(
                  "{" +
                  "   '_id': #" +
@@ -129,7 +131,7 @@ public class JongoStockExchangeRepository implements StockExchangeRepository {
     @Override
     public Set<LocalDate> getHolidays(String stockExchangeSymbol) {
         Aggregate.ResultsIterator<StockExchangeHoliday> holidays =
-            jongo.getCollection("stock_exchange")
+            jongo.getCollection(STOCK_EXCHANGES)
                  .aggregate("{" +
                             "    '$match': {" +
                             "        '_id': #" +
@@ -154,7 +156,7 @@ public class JongoStockExchangeRepository implements StockExchangeRepository {
 
     @Override
     public boolean containsHoliday(String stockExchangeSymbol, LocalDate holiday) {
-        return jongo.getCollection("stock_exchange")
+        return jongo.getCollection(STOCK_EXCHANGES)
                     .find("{" +
                           "     '_id': #," +
                           "     'holidays': #" +
@@ -165,7 +167,7 @@ public class JongoStockExchangeRepository implements StockExchangeRepository {
 
     @Override
     public Optional<Division> getDivision(String stockExchangeSymbol, String securitySymbol, LocalDate divisionDate) {
-        Aggregate.ResultsIterator<Division> division = jongo.getCollection("stock_exchange")
+        Aggregate.ResultsIterator<Division> division = jongo.getCollection(STOCK_EXCHANGES)
                                                             .aggregate("{" +
                                                                        "    $unwind: '$securities'" +
                                                                        "}")
