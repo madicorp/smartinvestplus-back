@@ -15,7 +15,7 @@ import java.util.List;
  * Date: 02/07/2016
  * Time: 00:08
  */
-@Document(collection = "stock_exchange")
+@Document(collection = "stock_exchanges")
 @Getter
 @Setter
 @NoArgsConstructor

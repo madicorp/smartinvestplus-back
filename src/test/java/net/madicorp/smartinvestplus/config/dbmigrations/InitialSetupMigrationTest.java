@@ -76,7 +76,7 @@ public class InitialSetupMigrationTest {
 
         // THEN
         Jongo jongo = jongo();
-        MongoCollection stockExchanges = jongo.getCollection("stock_exchange");
+        MongoCollection stockExchanges = jongo.getCollection("stock_exchanges");
         StockExchangeWithSecurities brvm = stockExchanges.find().as(StockExchangeWithSecurities.class).next();
         Assertions.assertThat(brvm.getSymbol()).isEqualTo("BRVM");
         Assertions.assertThat(brvm.getName()).isEqualTo("Bourse régionale des valeurs Mobilières");

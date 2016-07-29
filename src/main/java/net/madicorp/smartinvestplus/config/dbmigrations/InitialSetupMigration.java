@@ -64,7 +64,7 @@ public class InitialSetupMigration {
 
     @ChangeSet(order = "03", author = "initiator", id = "03-addStockExchanges")
     public void addStockExchangesAndTitles(DB db) {
-        MongoCollection stockExchanges = collection(db, "stock_exchange");
+        MongoCollection stockExchanges = collection(db, "stock_exchanges");
         stockExchanges.ensureIndex(mongoIndex("_id", "titles"));
         StockExchangeWithSecurities brvm = new StockExchangeWithSecurities();
         brvm.setName("Bourse régionale des valeurs Mobilières");
@@ -104,7 +104,7 @@ public class InitialSetupMigration {
         String stockExchange = stockExchangeAndSecurity[0].toLowerCase(),
             security = stockExchangeAndSecurity[1].toLowerCase();
         MongoCollection closingRatesCollection = collection(db, "close_rates");
-        closingRatesCollection.ensureIndex(mongoIndex("stock_exchange", "security", "date"));
+        closingRatesCollection.ensureIndex(mongoIndex("stock_exchanges", "security", "date"));
         try (BufferedReader reader = new BufferedReader(new FileReader(closeRatesFile.getFile()))) {
             CloseRate[] closeRates = reader.lines()
                                            // Skip header

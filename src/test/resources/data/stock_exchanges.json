@@ -1,5 +1,5 @@
 {
-    "stock_exchange": [
+    "stock_exchanges": [
         {
             "_id": "BRVM",
             "name": "Bourse Régionale des Valeurs Mobilières",
