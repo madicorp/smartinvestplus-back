@@ -35,7 +35,7 @@ public abstract class AbstractAuditingEntity implements Serializable {
     private String lastModifiedBy;
 
     @LastModifiedDate
-    @JsonProperty("last_modified_date  ")
+    @JsonProperty("last_modified_date")
     @JsonIgnore
     private ZonedDateTime lastModifiedDate = ZonedDateTime.now();
 
