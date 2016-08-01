@@ -101,8 +101,8 @@ public class InitialSetupMigration {
     private void insertCloseRates(DB db, Resource closeRatesFile) {
         String closeRatesFileName = closeRatesFile.getFilename();
         String[] stockExchangeAndSecurity = closeRatesFileName.replace(".csv", "").split("_");
-        String stockExchange = stockExchangeAndSecurity[0].toLowerCase(),
-            security = stockExchangeAndSecurity[1].toLowerCase();
+        String stockExchange = stockExchangeAndSecurity[0].toUpperCase(),
+            security = stockExchangeAndSecurity[1].toUpperCase();
         MongoCollection closingRatesCollection = collection(db, "close_rates");
         closingRatesCollection.ensureIndex(mongoIndex("stock_exchanges", "security", "date"));
         try (BufferedReader reader = new BufferedReader(new FileReader(closeRatesFile.getFile()))) {

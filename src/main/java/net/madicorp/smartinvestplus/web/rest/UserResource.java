@@ -9,6 +9,7 @@ import net.madicorp.smartinvestplus.repository.UserRepository;
 import net.madicorp.smartinvestplus.security.AuthoritiesConstants;
 import net.madicorp.smartinvestplus.service.MailService;
 import net.madicorp.smartinvestplus.service.UserService;
+import net.madicorp.smartinvestplus.stockexchange.domain.Username;
 import net.madicorp.smartinvestplus.web.rest.dto.ManagedUserDTO;
 import net.madicorp.smartinvestplus.web.rest.util.HeaderUtil;
 import net.madicorp.smartinvestplus.web.rest.util.PaginationUtil;
@@ -190,9 +191,9 @@ public class UserResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Timed
-    public Response getAllUsers(@QueryParam("page") int page, @QueryParam("size") int size)
+    public Response getAllUsers(@QueryParam("page") Integer page, @QueryParam("size") Integer size)
         throws URISyntaxException {
-        Page<User> userPage = userRepository.findAll(new PageRequest(page, size));
+        Page<User> userPage = userRepository.findAll(new TrivialPage(page, size));
         List<ManagedUserDTO> managedUserDTOs = userPage.getContent().stream()
                                                        .map(ManagedUserDTO::new)
                                                        .collect(Collectors.toList());
@@ -210,10 +211,10 @@ public class UserResource {
      * @return the Response with status 200 (OK) and with body the "login" user, or with status 404 (Not Found)
      */
     @GET
-    @Path("/{login: " + Constants.LOGIN_REGEX + "}")
+    @Path("/{login}")
     @Produces(MediaType.APPLICATION_JSON)
     @Timed
-    public Response getUser(@PathParam("login") String login) {
+    public Response getUser(@PathParam("login") @Username String login) {
         log.debug("REST request to get User : {}", login);
         return userService.getUserWithAuthoritiesByLogin(login)
                           .map(ManagedUserDTO::new)
@@ -228,11 +229,11 @@ public class UserResource {
      * @return the ResponseEntity with status 200 (OK)
      */
     @DELETE
-    @Path("/{login: " + Constants.LOGIN_REGEX + "}")
+    @Path("/{login}")
     @Produces(MediaType.APPLICATION_JSON)
     @Timed
     @Secured(AuthoritiesConstants.ADMIN)
-    public ResponseEntity<Void> deleteUser(@PathParam("login") String login) {
+    public ResponseEntity<Void> deleteUser(@PathParam("login") @Username String login) {
         log.debug("REST request to delete User: {}", login);
         userService.deleteUserInformation(login);
         return ResponseEntity.ok().headers(HeaderUtil.createAlert("userManagement.deleted", login)).build();

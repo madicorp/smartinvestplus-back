@@ -7,7 +7,6 @@ import net.madicorp.smartinvestplus.test.HttpTestRule;
 import net.madicorp.smartinvestplus.test.ResponseAssertion;
 import org.junit.Before;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.springframework.boot.test.SpringApplicationConfiguration;
@@ -25,7 +24,7 @@ import static org.mockito.Mockito.when;
  *
  * @see UserResource
  */
-@SpringApplicationConfiguration({UserAccountIntTestConfiguration.class, JacksonConfiguration.class})
+@SpringApplicationConfiguration({IntTestConfiguration.class, JacksonConfiguration.class})
 public class UserResourceIntTest {
     @ClassRule
     public static final HttpTestRule rule = new HttpTestRule();

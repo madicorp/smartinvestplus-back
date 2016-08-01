@@ -3,6 +3,7 @@ package net.madicorp.smartinvestplus.stockexchange.resource;
 import net.madicorp.smartinvestplus.domain.JSONHyperlinkBuilder;
 import net.madicorp.smartinvestplus.stockexchange.domain.Security;
 import net.madicorp.smartinvestplus.stockexchange.domain.StockExchangeWithSecurities;
+import net.madicorp.smartinvestplus.stockexchange.domain.Symbol;
 import net.madicorp.smartinvestplus.stockexchange.repository.StockExchangeCRUDRepository;
 import net.madicorp.smartinvestplus.stockexchange.service.StockExchangeService;
 import net.madicorp.smartinvestplus.web.rest.HttpUtil;
@@ -64,10 +65,12 @@ public class StockExchangeResource {
     @Path("/stock-exchanges/{symbol}")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public JSONObject getStockExchange(@PathParam("symbol") String symbol) {
-        log.debug("REST request to get stock exchange: {}", symbol);
+    public JSONObject getStockExchange(@PathParam("symbol") @Symbol String symbol) {
+        final String upperSymbol = symbol.toUpperCase();
+        log.debug("REST request to get stock exchange: {}", upperSymbol);
         StockExchangeWithSecurities stockExchange =
-            stockExchangeService.getStockExchange(symbol).orElseThrow(() -> new StockExchangeNotFoundException(symbol));
+            stockExchangeService.getStockExchange(upperSymbol)
+                                .orElseThrow(() -> new StockExchangeNotFoundException(upperSymbol));
         return this.buildStockExchangeJSON(stockExchange, () -> httpUtil.getUriBuilder(uriInfo));
     }
 

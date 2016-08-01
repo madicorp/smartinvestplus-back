@@ -5,11 +5,11 @@
             "name": "Bourse Régionale des Valeurs Mobilières",
             "securities":[
                 {
-                    "_id": "sec_1",
+                    "_id": "SEC1",
                     "name": "Security 1"
                 },
                 {
-                    "_id": "sec_2",
+                    "_id": "SEC2",
                     "name": "Security 2",
                     "divisions": [
                         {
