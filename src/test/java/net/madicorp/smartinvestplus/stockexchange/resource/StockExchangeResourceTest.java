@@ -41,7 +41,7 @@ public class StockExchangeResourceTest {
                          .hasSize("$", 1)
                          .contains("$[0].symbol", "BRVM")
                          .contains("$[0].links[0].rel", "security")
-                         .contains("$[0].links[0].href", "/api/stock-exchanges/BRVM/securities/sec_1");
+                         .contains("$[0].links[0].href", "/api/stock-exchanges/BRVM/securities/SEC1");
     }
 
     @Test
@@ -50,7 +50,7 @@ public class StockExchangeResourceTest {
         when(mockRepo.findOne("BRVM")).thenReturn(stockExchange());
 
         // WHEN
-        Response actual = rule.get("/api/stock-exchanges/BRVM");
+        Response actual = rule.get("/api/stock-exchanges/brvm");
 
         // THEN
         ResponseAssertion.assertThat(actual)
@@ -58,7 +58,7 @@ public class StockExchangeResourceTest {
                          .hasSize("$.links", 2)
                          .contains("$.symbol", "BRVM")
                          .contains("$.links[0].rel", "security")
-                         .contains("$.links[0].href", "/api/stock-exchanges/BRVM/securities/sec_1");
+                         .contains("$.links[0].href", "/api/stock-exchanges/brvm/securities/SEC1");
     }
 
     @Test
@@ -67,7 +67,7 @@ public class StockExchangeResourceTest {
         when(mockRepo.findOne("BRVM")).thenReturn(null);
 
         // WHEN
-        Response actual = rule.get("/api/stock-exchanges/BRVM");
+        Response actual = rule.get("/api/stock-exchanges/brvm");
 
         // THEN
         ResponseAssertion.assertThat(actual)

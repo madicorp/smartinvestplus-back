@@ -1,5 +1,6 @@
 package net.madicorp.smartinvestplus.stockexchange.resource;
 
+import net.madicorp.smartinvestplus.date.URIDate;
 import net.madicorp.smartinvestplus.domain.JSONHyperlinkBuilder;
 import net.madicorp.smartinvestplus.stockexchange.domain.*;
 import net.madicorp.smartinvestplus.stockexchange.service.CloseRateService;
@@ -48,11 +49,12 @@ public class SecuritiesResource {
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public JSONArray getSecurities(@PathParam("stock-exchange-symbol") String stockExchangeSymbol) {
+    public JSONArray getSecurities(@PathParam("stock-exchange-symbol") @Symbol String stockExchangeSymbol) {
         log.debug("REST request to get securities in stock exchange '{}'", stockExchangeSymbol);
+        final String upperStockExchangeSymbol = stockExchangeSymbol.toUpperCase();
         StockExchangeWithSecurities stockExchange =
-            stockExchService.getStockExchange(stockExchangeSymbol)
-                            .orElseThrow(() -> new StockExchangeNotFoundException(stockExchangeSymbol));
+            stockExchService.getStockExchange(upperStockExchangeSymbol)
+                            .orElseThrow(() -> new StockExchangeNotFoundException(upperStockExchangeSymbol));
         UriBuilder uriBuilder = httpUtil.getUriBuilder(uriInfo).path("{securitySymbol}");
         return stockExchange.getSecurities()
                             .stream()
@@ -70,10 +72,10 @@ public class SecuritiesResource {
     @GET
     @Path("/{security-symbol}/")
     @Produces(MediaType.APPLICATION_JSON)
-    public SecurityWithStockExchange getSecurity(@PathParam("stock-exchange-symbol") String stockExchangeSymbol,
-                                                 @PathParam("security-symbol") String securitySymbol) {
+    public SecurityWithStockExchange getSecurity(@PathParam("stock-exchange-symbol") @Symbol String stockExchangeSymbol,
+                                                 @PathParam("security-symbol") @Symbol String securitySymbol) {
         log.debug("REST request to get security '{}' in stock exchange '{}'", securitySymbol, stockExchangeSymbol);
-        return getSecurityWithStockExchange(stockExchangeSymbol, securitySymbol);
+        return getSecurityWithStockExchange(stockExchangeSymbol.toUpperCase(), securitySymbol.toUpperCase());
     }
 
     private JSONObject buildSecurityJSON(Security security, UriBuilder uriBuilder) {
@@ -98,8 +100,11 @@ public class SecuritiesResource {
     @Path("/{security-symbol}/close-rates/")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Iterator<CloseRate> getStockExchange(@PathParam("stock-exchange-symbol") String stockExchangeSymbol,
-                                                @PathParam("security-symbol") String securitySymbol) {
+    public Iterator<CloseRate> getStockExchange(@PathParam("stock-exchange-symbol") @Symbol String stockExchangeSymbol,
+                                                @PathParam("security-symbol") @Symbol String securitySymbol) {
+
+        stockExchangeSymbol = stockExchangeSymbol.toUpperCase();
+        securitySymbol = securitySymbol.toUpperCase();
         log.debug("REST request to get close rates one month to date for security '{}' in stock exchange '{}'",
                   securitySymbol, stockExchangeSymbol);
         try {
@@ -116,9 +121,11 @@ public class SecuritiesResource {
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response create(@PathParam("stock-exchange-symbol") String stockExchangeSymbol,
-                           @PathParam("security-symbol") String securitySymbol,
+    public Response create(@PathParam("stock-exchange-symbol") @Symbol String stockExchangeSymbol,
+                           @PathParam("security-symbol") @Symbol String securitySymbol,
                            Division division) {
+        stockExchangeSymbol = stockExchangeSymbol.toUpperCase();
+        securitySymbol = securitySymbol.toUpperCase();
         LocalDate divisionDate = division.getDate();
         log.debug(
             "REST request to create close rates division for security '{}' in stock exchange '{}' at '{}' to apply {} rate",
@@ -140,9 +147,11 @@ public class SecuritiesResource {
     @Path("/{security-symbol}/divisions/{division-date}")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Division create(@PathParam("stock-exchange-symbol") String stockExchangeSymbol,
-                           @PathParam("security-symbol") String securitySymbol,
-                           @PathParam("division-date") String formattedDivisionDate) {
+    public Division create(@PathParam("stock-exchange-symbol") @Symbol String stockExchangeSymbol,
+                           @PathParam("security-symbol") @Symbol String securitySymbol,
+                           @PathParam("division-date") @URIDate String formattedDivisionDate) {
+        stockExchangeSymbol = stockExchangeSymbol.toUpperCase();
+        securitySymbol = securitySymbol.toUpperCase();
         LocalDate divisionDate = LocalDate.parse(formattedDivisionDate, URI_DATE_FORMATTER);
         return stockExchService.getDivision(stockExchangeSymbol, securitySymbol, divisionDate)
                                .orElseThrow(NotFoundException::new);

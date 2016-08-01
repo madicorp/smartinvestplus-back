@@ -8,9 +8,12 @@ import org.springframework.boot.test.SpringApplicationConfiguration;
 
 import javax.inject.Inject;
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.AbstractMap;
+import java.util.Map;
 
 /**
  * A class rule that starts jersey test server, set up annotated beans that must be injected and finally stops server
@@ -83,8 +86,17 @@ public class HttpTestRule extends ExternalResource {
         }
     }
 
-    public Response get(String path) {
-        return httpTestHelper.target(path).request().get();
+    @SafeVarargs
+    public final Response get(String path, Map.Entry<String, String>... params) {
+        WebTarget target = httpTestHelper.target(path);
+        for (Map.Entry<String, String> param : params) {
+            target = target.queryParam(param.getKey(), param.getValue());
+        }
+        return target.request().get();
+    }
+
+    public static Map.Entry<String, String> param(String key, String value) {
+        return new AbstractMap.SimpleEntry<>(key, value);
     }
 
     public Response put(String path, Entity<?> entity) {

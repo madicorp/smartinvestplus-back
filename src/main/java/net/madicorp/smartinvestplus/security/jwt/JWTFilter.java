@@ -81,6 +81,9 @@ public class JWTFilter extends GenericFilterBean {
     }
 
     private String getTokenIfExist(HttpServletRequest httpServletRequest) {
+        if(httpServletRequest.getCookies() == null) {
+            throw this.authCredentialsNotFoundException();
+        }
         return Arrays.stream(httpServletRequest.getCookies())
                      .filter(cookie -> JWT_COOKIE_NAME.equals(cookie.getName()))
                      .map(Cookie::getValue)

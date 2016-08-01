@@ -4,9 +4,6 @@ import net.madicorp.smartinvestplus.service.AuditEventService;
 import net.madicorp.smartinvestplus.web.rest.util.PaginationUtil;
 import org.springframework.boot.actuate.audit.AuditEvent;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 
@@ -29,12 +26,8 @@ public class AuditResource {
     @Inject
     private HttpUtil httpUtil;
 
-    private AuditEventService auditEventService;
-
     @Inject
-    public AuditResource(AuditEventService auditEventService) {
-        this.auditEventService = auditEventService;
-    }
+    private AuditEventService auditEventService;
 
     /**
      * GET  /audits : get a page of AuditEvents between the fromDate and toDate.
@@ -47,16 +40,18 @@ public class AuditResource {
      * @throws URISyntaxException if there is an error to generate the pagination HTTP headers
      */
     @GET
-    public Response getAll(
-        @QueryParam("fromDate") String from,
-        @QueryParam("toDate") String to,
-        @QueryParam("page") int page,
-        @QueryParam("size") int size) throws URISyntaxException {
-        LocalDate fromDate = LocalDate.parse(from, DateTimeFormatter.ISO_DATE);
-        LocalDate toDate = LocalDate.parse(from, DateTimeFormatter.ISO_DATE);
-
-        Page<AuditEvent> auditEventPage =
-            auditEventService.findByDates(fromDate.atTime(0, 0), toDate.atTime(23, 59), new PageRequest(page, size));
+    public Response getAll(@QueryParam("fromDate") String from, @QueryParam("toDate") String to,
+                           @QueryParam("page") Integer page,
+                           @QueryParam("size") Integer size) throws URISyntaxException {
+        TrivialPage pageable = new TrivialPage(page, size);
+        Page<AuditEvent> auditEventPage;
+        if (from != null && to != null) {
+            LocalDate fromDate = LocalDate.parse(from, DateTimeFormatter.BASIC_ISO_DATE);
+            LocalDate toDate = LocalDate.parse(to, DateTimeFormatter.BASIC_ISO_DATE);
+            auditEventPage = auditEventService.findByDates(fromDate.atTime(0, 0), toDate.atTime(23, 59), pageable);
+        } else {
+            auditEventPage = auditEventService.findAll(pageable);
+        }
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(auditEventPage, "/api/audits");
         return httpUtil.addHeaders(Response.ok(auditEventPage.getContent()), headers).build();
     }
@@ -67,7 +62,7 @@ public class AuditResource {
      * @param id the id of the entity to get
      * @return the Response with status 200 (OK) and the AuditEvent in body, or status 404 (Not Found)
      */
-    @Path("/{id:.+}")
+    @Path("/{id}")
     @GET
     public Response get(@PathParam("id") String id) {
         return auditEventService.find(id)

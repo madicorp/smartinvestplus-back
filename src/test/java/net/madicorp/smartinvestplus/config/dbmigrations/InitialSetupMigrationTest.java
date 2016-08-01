@@ -96,8 +96,8 @@ public class InitialSetupMigrationTest {
         Jongo jongo = jongo();
         MongoCollection actual = jongo.getCollection("close_rates");
         LocalDate firstAirLiquideDate = actual.find("{" +
-                                                    "   'stock_exchange': 'brvm'," +
-                                                    "   'security': 'sivc'" +
+                                                    "   'stock_exchange': 'BRVM'," +
+                                                    "   'security': 'SIVC'" +
                                                     "}")
                                               .limit(1)
                                               .as(CloseRate.class)
@@ -105,8 +105,8 @@ public class InitialSetupMigrationTest {
                                               .getDate();
         Assertions.assertThat(firstAirLiquideDate).isEqualTo("2016-03-18");
         LocalDate lastAirLiguideDate = actual.find("{" +
-                                                   "   'stock_exchange': 'brvm'," +
-                                                   "   'security': 'sivc'" +
+                                                   "   'stock_exchange': 'BRVM'," +
+                                                   "   'security': 'SIVC'" +
                                                    "}")
                                              .sort("{_id:-1}")
                                              .limit(1)

@@ -38,9 +38,9 @@ public class HolidaysResourceTest {
     }
 
     @Test
-    public void should_return_201_and_add_holiday_if_does_not_exist_in_stock_exchange() throws Exception {
+    public void should_add_holiday_and_return_201_if_does_not_exist_in_stock_exchange() throws Exception {
         // GIVEN
-        when(mockRepo.getHolidays("brvm")).thenReturn(Collections.emptySet());
+        when(mockRepo.getHolidays("BRVM")).thenReturn(Collections.emptySet());
 
         // WHEN
         LocalDate july142016 = LocalDate.of(2016, Month.JULY, 14);
@@ -52,16 +52,16 @@ public class HolidaysResourceTest {
         ResponseAssertion.assertThat(actual)
                          .created()
                          .location("/api/stock-exchanges/brvm/holidays/20160714")
-                         .contains("$.stock_exchange", "brvm")
+                         .contains("$.stock_exchange", "BRVM")
                          .contains("$.date", july142016String);
-        verify(mockRepo).addHoliday("brvm", july142016);
+        verify(mockRepo).addHoliday("BRVM", july142016);
     }
 
     @Test
     public void should_return_400_and_if_holiday_exists_in_stock_exchange() throws Exception {
         // GIVEN
         LocalDate july142016 = LocalDate.of(2016, Month.JULY, 14);
-        when(mockRepo.getHolidays("brvm")).thenReturn(Collections.singleton(july142016));
+        when(mockRepo.getHolidays("BRVM")).thenReturn(Collections.singleton(july142016));
 
         // WHEN
         String july142016String = july142016.format(DateTimeFormatter.ISO_DATE);
@@ -70,14 +70,14 @@ public class HolidaysResourceTest {
         // THEN
         ResponseAssertion.assertThat(actual)
                          .badRequest();
-        verify(mockRepo, never()).addHoliday("brvm", july142016);
+        verify(mockRepo, never()).addHoliday("BRVM", july142016);
     }
 
     @Test
     public void should_return_200_if_it_can_get_holiday_in_stock_exchange() throws Exception {
         // GIVEN
         LocalDate july142016 = LocalDate.of(2016, Month.JULY, 14);
-        when(mockRepo.containsHoliday("brvm", july142016)).thenReturn(true);
+        when(mockRepo.containsHoliday("BRVM", july142016)).thenReturn(true);
         String july142016String = july142016.format(DateTimeFormatter.ISO_DATE);
 
         // WHEN
@@ -87,7 +87,7 @@ public class HolidaysResourceTest {
         // THEN
         ResponseAssertion.assertThat(actual)
                          .ok()
-                         .contains("$.stock_exchange", "brvm")
+                         .contains("$.stock_exchange", "BRVM")
                          .contains("$.date", july142016String);
     }
 
@@ -95,7 +95,7 @@ public class HolidaysResourceTest {
     public void should_return_404_if_it_can_get_holiday_in_stock_exchange() throws Exception {
         // GIVEN
         LocalDate july142016 = LocalDate.of(2016, Month.JULY, 14);
-        when(mockRepo.containsHoliday("brvm", july142016)).thenReturn(false);
+        when(mockRepo.containsHoliday("BRVM", july142016)).thenReturn(false);
 
         // WHEN
         Response actual =

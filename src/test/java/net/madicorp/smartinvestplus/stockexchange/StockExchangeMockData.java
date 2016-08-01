@@ -28,14 +28,14 @@ public class StockExchangeMockData {
         security.getStockExchange().setSymbol("BRVM");
         security.getStockExchange().setName("Bourse Régionale des VM");
         security.setName("Security " + idx);
-        security.setSymbol("sec_" + idx);
+        security.setSymbol("SEC" + idx);
         return security;
     }
 
     private static Security smplSecurity(int idx) {
         Security security = new Security();
         security.setName("Security " + idx);
-        security.setSymbol("sec_" + idx);
+        security.setSymbol("SEC" + idx);
         return security;
     }
 

@@ -19,19 +19,11 @@ import java.util.Optional;
  */
 @Service
 public class AuditEventService {
-
+    @Inject
     private PersistenceAuditEventRepository persistenceAuditEventRepository;
 
-    private AuditEventConverter auditEventConverter;
-
     @Inject
-    public AuditEventService(
-        PersistenceAuditEventRepository persistenceAuditEventRepository,
-        AuditEventConverter auditEventConverter) {
-
-        this.persistenceAuditEventRepository = persistenceAuditEventRepository;
-        this.auditEventConverter = auditEventConverter;
-    }
+    private AuditEventConverter auditEventConverter;
 
     public Page<AuditEvent> findAll(Pageable pageable) {
         return persistenceAuditEventRepository.findAll(pageable)

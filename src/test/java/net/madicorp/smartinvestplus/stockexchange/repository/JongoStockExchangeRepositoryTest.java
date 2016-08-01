@@ -42,7 +42,7 @@ public class JongoStockExchangeRepositoryTest {
     public void should_return_sec_1_stock_exchange() throws Exception {
         // GIVEN
         String stockExchangeSymbol = "BRVM";
-        String securitySymbol = "sec_1";
+        String securitySymbol = "SEC1";
 
         // WHEN
         SecurityWithStockExchange actual = subject.findSecurity(stockExchangeSymbol, securitySymbol);
@@ -52,7 +52,7 @@ public class JongoStockExchangeRepositoryTest {
                   .hasFieldOrPropertyWithValue("symbol", "BRVM")
                   .hasFieldOrPropertyWithValue("name", "Bourse Régionale des Valeurs Mobilières");
         Assertions.assertThat(actual)
-                  .hasFieldOrPropertyWithValue("symbol", "sec_1")
+                  .hasFieldOrPropertyWithValue("symbol", "SEC1")
                   .hasFieldOrPropertyWithValue("name", "Security 1");
     }
 
@@ -68,10 +68,10 @@ public class JongoStockExchangeRepositoryTest {
 
         // THEN
         SecurityWithStockExchange actualSecurity =
-            subject.findSecurity("BRVM", "sec_1");
+            subject.findSecurity("BRVM", "SEC1");
         Assertions.assertThat(actualSecurity.getDivisions()).containsOnly(division);
         SecurityWithStockExchange sec2 =
-            subject.findSecurity("BRVM", "sec_2");
+            subject.findSecurity("BRVM", "SEC2");
         Assertions.assertThat(sec2.getDivisions()).doesNotContain(division);
     }
 
@@ -87,10 +87,10 @@ public class JongoStockExchangeRepositoryTest {
 
         // THEN
         SecurityWithStockExchange actualSecurity =
-            subject.findSecurity("BRVM", "sec_2");
+            subject.findSecurity("BRVM", "SEC2");
         Assertions.assertThat(actualSecurity.getDivisions()).hasSize(2).contains(division);
         SecurityWithStockExchange sec2 =
-            subject.findSecurity("BRVM", "sec_1");
+            subject.findSecurity("BRVM", "SEC1");
         Assertions.assertThat(sec2.getDivisions()).doesNotContain(division);
     }
 
@@ -152,7 +152,7 @@ public class JongoStockExchangeRepositoryTest {
         subject.addDivision(security.getStockExchange().getSymbol(), security.getSymbol(), division);
 
         // WHEN
-        Optional<Division> actual = subject.getDivision("BRVM", "sec_1", divisionDate);
+        Optional<Division> actual = subject.getDivision("BRVM", "SEC1", divisionDate);
 
         // THEN
         Assertions.assertThat(actual).contains(division);
@@ -165,7 +165,7 @@ public class JongoStockExchangeRepositoryTest {
         LocalDate divisionDate = LocalDate.of(2016, 7, 10);
 
         // WHEN
-        Optional<Division> actual = subject.getDivision("BRVM", "sec_1", divisionDate);
+        Optional<Division> actual = subject.getDivision("BRVM", "SEC1", divisionDate);
 
         // THEN
         Assertions.assertThat(actual).isEmpty();

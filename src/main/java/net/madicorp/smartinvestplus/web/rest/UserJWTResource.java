@@ -5,6 +5,8 @@ import net.madicorp.smartinvestplus.config.JHipsterProperties;
 import net.madicorp.smartinvestplus.domain.User;
 import net.madicorp.smartinvestplus.security.jwt.TokenProvider;
 import net.madicorp.smartinvestplus.service.UserService;
+import net.madicorp.smartinvestplus.stockexchange.domain.Symbol;
+import net.madicorp.smartinvestplus.stockexchange.domain.Username;
 import net.madicorp.smartinvestplus.web.rest.dto.LoginDTO;
 import net.madicorp.smartinvestplus.web.rest.dto.UserDTO;
 import org.springframework.http.MediaType;
@@ -58,7 +60,8 @@ public class UserJWTResource {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     @Produces(MediaType.APPLICATION_JSON_VALUE)
     @Timed
-    public Response authorize(@FormParam("j_username") String username, @FormParam("j_password") String password) {
+    public Response authorize(@FormParam("j_username") @Username String username,
+                              @FormParam("j_password") String password) {
         LoginDTO loginDTO = login(username, password);
 
         UsernamePasswordAuthenticationToken authenticationToken =

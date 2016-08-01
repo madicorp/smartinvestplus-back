@@ -15,6 +15,7 @@ import org.jongo.marshall.jackson.oid.MongoId;
 @ToString
 public class Security {
     @MongoId
+    @Symbol
     private String symbol;
     private String name;
     private boolean generated = false;

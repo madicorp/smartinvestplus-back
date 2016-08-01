@@ -64,7 +64,7 @@ public class JongoCloseRateRepositoryTest {
         LocalDate to = LocalDate.of(2016, Month.MARCH, 26);
 
         // WHEN
-        Iterator<CloseRate> actual = subject.findOneMonthToDateCloseRates("BRVM", "sec_1", to);
+        Iterator<CloseRate> actual = subject.findOneMonthToDateCloseRates("BRVM", "SEC1", to);
 
         // THEN
         Assertions.assertThat(actual)
@@ -83,7 +83,7 @@ public class JongoCloseRateRepositoryTest {
         LocalDate feb25 = LocalDate.of(2016, Month.FEBRUARY, 25);
 
         // WHEN
-        Optional<CloseRate> actual = subject.findClosestCloseRateInPast("BRVM", "sec_1", feb25);
+        Optional<CloseRate> actual = subject.findClosestCloseRateInPast("BRVM", "SEC1", feb25);
 
         // THEN
         Assertions.assertThat(actual).contains(closeRate(LocalDate.of(2016, Month.FEBRUARY, 23), 1000));
@@ -96,7 +96,7 @@ public class JongoCloseRateRepositoryTest {
         LocalDate jan1 = LocalDate.of(2016, Month.JANUARY, 1);
 
         // WHEN
-        Optional<CloseRate> actual = subject.findClosestCloseRateInPast("BRVM", "sec_1", jan1);
+        Optional<CloseRate> actual = subject.findClosestCloseRateInPast("BRVM", "SEC_1", jan1);
 
         // THEN
         Assertions.assertThat(actual).isEmpty();

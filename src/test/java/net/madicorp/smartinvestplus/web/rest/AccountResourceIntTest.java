@@ -24,7 +24,7 @@ import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
 
-@SpringApplicationConfiguration({UserAccountIntTestConfiguration.class, JacksonConfiguration.class})
+@SpringApplicationConfiguration({IntTestConfiguration.class, JacksonConfiguration.class})
 public class AccountResourceIntTest {
     @ClassRule
     public static final HttpTestRule rule = new HttpTestRule();

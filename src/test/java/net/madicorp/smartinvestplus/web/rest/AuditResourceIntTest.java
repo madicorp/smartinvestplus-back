@@ -1,143 +1,127 @@
 package net.madicorp.smartinvestplus.web.rest;
 
-import net.madicorp.smartinvestplus.SmartInvestPlusApp;
+import net.madicorp.smartinvestplus.config.JacksonConfiguration;
 import net.madicorp.smartinvestplus.config.audit.AuditEventConverter;
 import net.madicorp.smartinvestplus.domain.PersistentAuditEvent;
 import net.madicorp.smartinvestplus.repository.PersistenceAuditEventRepository;
-import net.madicorp.smartinvestplus.service.AuditEventService;
+import net.madicorp.smartinvestplus.test.HttpTestRule;
+import net.madicorp.smartinvestplus.test.ResponseAssertion;
 import org.junit.Before;
-import org.junit.Ignore;
+import org.junit.ClassRule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.MockitoAnnotations;
-import org.springframework.boot.test.IntegrationTest;
+import org.mockito.Matchers;
+import org.mockito.Mockito;
 import org.springframework.boot.test.SpringApplicationConfiguration;
-import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
-import org.springframework.http.MediaType;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.test.context.web.WebAppConfiguration;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
 import javax.inject.Inject;
+import javax.ws.rs.core.Response;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.util.Collections;
+import java.util.List;
 
-import static org.hamcrest.Matchers.hasItem;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static net.madicorp.smartinvestplus.test.HttpTestRule.param;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.when;
 
 /**
  * Test class for the AuditResource REST controller.
- *
  */
-@SpringApplicationConfiguration(classes = SmartInvestPlusApp.class)
-@Ignore
+@SpringApplicationConfiguration({IntTestConfiguration.class, JacksonConfiguration.class})
 public class AuditResourceIntTest {
+    @ClassRule
+    public static final HttpTestRule rule = new HttpTestRule();
 
     private static final String SAMPLE_PRINCIPAL = "SAMPLE_PRINCIPAL";
     private static final String SAMPLE_TYPE = "SAMPLE_TYPE";
     private static final LocalDateTime SAMPLE_TIMESTAMP = LocalDateTime.parse("2015-08-04T10:11:30");
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @Inject
-    private static PersistenceAuditEventRepository auditEventRepository;
+    private static PersistenceAuditEventRepository mockAuditEventRepo;
 
     @Inject
     private static AuditEventConverter auditEventConverter;
 
-    @Inject
-    private static MappingJackson2HttpMessageConverter jacksonMessageConverter;
-
-    @Inject
-    private static PageableHandlerMethodArgumentResolver pageableArgumentResolver;
-
-    private PersistentAuditEvent auditEvent;
-
-    private MockMvc restAuditMockMvc;
-
     @Before
     public void setup() {
-        MockitoAnnotations.initMocks(this);
-        AuditEventService auditEventService =
-                new AuditEventService(auditEventRepository, auditEventConverter);
-        AuditResource auditResource = new AuditResource(auditEventService);
-        this.restAuditMockMvc = MockMvcBuilders.standaloneSetup(auditResource)
-            .setCustomArgumentResolvers(pageableArgumentResolver)
-            .setMessageConverters(jacksonMessageConverter).build();;
+        Mockito.reset(mockAuditEventRepo);
     }
 
-    @Before
-    public void initTest() {
-        auditEventRepository.deleteAll();
-        auditEvent = new PersistentAuditEvent();
+    @Test
+    public void should_retrieve_all_audits() throws Exception {
+        // GIVEN
+        when(mockAuditEventRepo.findAll(Matchers.<Pageable>any())).thenReturn(new PageImpl<>(singletonAuditEvent()));
+
+        // WHEN
+        Response actual = rule.get("/management/jhipster/audits");
+
+        // THEN
+        ResponseAssertion.assertThat(actual)
+                         .ok()
+                         .contains("$.[*].principal", SAMPLE_PRINCIPAL);
+    }
+
+    @Test
+    public void should_retrieve_audit_by_id() throws Exception {
+        // GIVEN
+        PersistentAuditEvent auditEvent = auditEvent();
+        when(mockAuditEventRepo.findOne(auditEvent.getId())).thenReturn(auditEvent);
+
+        // WHEN
+        Response actual = rule.get("/management/jhipster/audits/" + auditEvent.getId());
+
+        // THEN
+        ResponseAssertion.assertThat(actual)
+                         .ok()
+                         .contains("$.principal", SAMPLE_PRINCIPAL);
+    }
+
+    @Test
+    public void should_retrieve_audit_between_2_dates() throws Exception {
+        // GIVEN
+        when(mockAuditEventRepo.findAllByAuditEventDateBetween(any(), any(), any()))
+            .thenReturn(new PageImpl<>(singletonAuditEvent()));
+        String fromDate = "20160701";
+        String toDate = "20160702";
+
+        // WHEN
+        Response actual = rule.get("/management/jhipster/audits", param("fromDate", fromDate), param("toDate", toDate));
+
+        // THEN
+        ResponseAssertion.assertThat(actual)
+                         .ok()
+                         .contains("$.[*].principal", SAMPLE_PRINCIPAL);
+    }
+
+    @Test
+    public void should_send_404_for_nonexistent_audit_event() throws Exception {
+        // GIVEN
+        // No audit event in repo
+
+        // WHEN
+        Response actual = rule.get("/management/jhipster/audits/" + Long.MAX_VALUE);
+
+        // THEN
+        ResponseAssertion.assertThat(actual)
+                         .notFound();
+    }
+
+    private static List<PersistentAuditEvent> singletonAuditEvent() {
+        PersistentAuditEvent auditEvent = new PersistentAuditEvent();
         auditEvent.setAuditEventType(SAMPLE_TYPE);
         auditEvent.setPrincipal(SAMPLE_PRINCIPAL);
         auditEvent.setAuditEventDate(SAMPLE_TIMESTAMP);
+        return Collections.singletonList(auditEvent());
     }
 
-    @Test
-    public void getAllAudits() throws Exception {
-        // Initialize the database
-        auditEventRepository.save(auditEvent);
-
-        // Get all the audits
-        restAuditMockMvc.perform(get("/management/jhipster/audits"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.[*].principal").value(hasItem(SAMPLE_PRINCIPAL)));
-    }
-
-    @Test
-    public void getAudit() throws Exception {
-        // Initialize the database
-        auditEventRepository.save(auditEvent);
-
-        // Get the audit
-        restAuditMockMvc.perform(get("/management/jhipster/audits/{id}", auditEvent.getId()))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.principal").value(SAMPLE_PRINCIPAL));
-    }
-
-    @Test
-    public void getAuditsByDate() throws Exception {
-        // Initialize the database
-        auditEventRepository.save(auditEvent);
-
-        // Generate dates for selecting audits by date, making sure the period will contain the audit
-        String fromDate  = SAMPLE_TIMESTAMP.minusDays(1).format(FORMATTER);
-        String toDate = SAMPLE_TIMESTAMP.plusDays(1).format(FORMATTER);
-
-        // Get the audit
-        restAuditMockMvc.perform(get("/management/jhipster/audits?fromDate="+fromDate+"&toDate="+toDate))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(jsonPath("$.[*].principal").value(hasItem(SAMPLE_PRINCIPAL)));
-    }
-
-    @Test
-    public void getNonExistingAuditsByDate() throws Exception {
-        // Initialize the database
-        auditEventRepository.save(auditEvent);
-
-        // Generate dates for selecting audits by date, making sure the period will not contain the sample audit
-        String fromDate  = SAMPLE_TIMESTAMP.minusDays(2).format(FORMATTER);
-        String toDate = SAMPLE_TIMESTAMP.minusDays(1).format(FORMATTER);
-
-        // Query audits but expect no results
-        restAuditMockMvc.perform(get("/management/jhipster/audits?fromDate=" + fromDate + "&toDate=" + toDate))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(header().string("X-Total-Count", "0"));
-    }
-
-    @Test
-    public void getNonExistingAudit() throws Exception {
-        // Get the audit
-        restAuditMockMvc.perform(get("/management/jhipster/audits/{id}", Long.MAX_VALUE))
-                .andExpect(status().isNotFound());
+    private static PersistentAuditEvent auditEvent() {
+        PersistentAuditEvent auditEvent = new PersistentAuditEvent();
+        auditEvent.setId("dummyId");
+        auditEvent.setAuditEventType(SAMPLE_TYPE);
+        auditEvent.setPrincipal(SAMPLE_PRINCIPAL);
+        auditEvent.setAuditEventDate(SAMPLE_TIMESTAMP);
+        return auditEvent;
     }
 
 }
