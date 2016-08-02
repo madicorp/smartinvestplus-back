@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-@Component
 @Path("/api/profile-info")
 public class ProfileInfoResource {
 

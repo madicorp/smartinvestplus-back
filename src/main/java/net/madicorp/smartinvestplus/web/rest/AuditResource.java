@@ -4,8 +4,8 @@ import net.madicorp.smartinvestplus.service.AuditEventService;
 import net.madicorp.smartinvestplus.web.rest.util.PaginationUtil;
 import org.springframework.boot.actuate.audit.AuditEvent;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
-import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;
@@ -18,13 +18,12 @@ import java.time.format.DateTimeFormatter;
 /**
  * REST controller for getting the audit events.
  */
-@Component
 @Path(value = "/management/jhipster/audits")
 @Produces(MediaType.APPLICATION_JSON)
 public class AuditResource {
 
     @Inject
-    private HttpUtil httpUtil;
+    private ResourceUtil resourceUtil;
 
     @Inject
     private AuditEventService auditEventService;
@@ -43,7 +42,7 @@ public class AuditResource {
     public Response getAll(@QueryParam("fromDate") String from, @QueryParam("toDate") String to,
                            @QueryParam("page") Integer page,
                            @QueryParam("size") Integer size) throws URISyntaxException {
-        TrivialPage pageable = new TrivialPage(page, size);
+        Pageable pageable = resourceUtil.page(page, size);
         Page<AuditEvent> auditEventPage;
         if (from != null && to != null) {
             LocalDate fromDate = LocalDate.parse(from, DateTimeFormatter.BASIC_ISO_DATE);
@@ -53,7 +52,7 @@ public class AuditResource {
             auditEventPage = auditEventService.findAll(pageable);
         }
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(auditEventPage, "/api/audits");
-        return httpUtil.addHeaders(Response.ok(auditEventPage.getContent()), headers).build();
+        return resourceUtil.addHeaders(Response.ok(auditEventPage.getContent()), headers).build();
     }
 
     /**
@@ -67,6 +66,6 @@ public class AuditResource {
     public Response get(@PathParam("id") String id) {
         return auditEventService.find(id)
                                 .map((entity) -> Response.ok(entity).build())
-                                .orElse(httpUtil.notFound());
+                                .orElse(resourceUtil.notFound());
     }
 }

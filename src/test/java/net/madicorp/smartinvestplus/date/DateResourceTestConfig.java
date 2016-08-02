@@ -1,11 +1,10 @@
 package net.madicorp.smartinvestplus.date;
 
 import net.madicorp.smartinvestplus.config.JacksonConfiguration;
-import net.madicorp.smartinvestplus.stockexchange.repository.CloseRateRepository;
 import net.madicorp.smartinvestplus.stockexchange.repository.StockExchangeCRUDRepository;
 import net.madicorp.smartinvestplus.stockexchange.repository.StockExchangeRepository;
 import net.madicorp.smartinvestplus.stockexchange.service.StockExchangeService;
-import net.madicorp.smartinvestplus.web.rest.HttpUtil;
+import net.madicorp.smartinvestplus.web.rest.ResourceUtil;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -27,8 +26,8 @@ public class DateResourceTestConfig {
     }
 
     @Bean
-    public HttpUtil httpUtil() {
-        return new HttpUtil();
+    public ResourceUtil httpUtil() {
+        return new ResourceUtil();
     }
 
     @Bean

@@ -6,13 +6,12 @@ import net.madicorp.smartinvestplus.stockexchange.domain.StockExchangeWithSecuri
 import net.madicorp.smartinvestplus.stockexchange.domain.Symbol;
 import net.madicorp.smartinvestplus.stockexchange.repository.StockExchangeCRUDRepository;
 import net.madicorp.smartinvestplus.stockexchange.service.StockExchangeService;
-import net.madicorp.smartinvestplus.web.rest.HttpUtil;
+import net.madicorp.smartinvestplus.web.rest.ResourceUtil;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;
@@ -24,7 +23,6 @@ import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-@Component
 @Path("/api")
 public class StockExchangeResource {
     private final Logger log = LoggerFactory.getLogger(StockExchangeResource.class);
@@ -33,7 +31,7 @@ public class StockExchangeResource {
     private UriInfo uriInfo;
 
     @Inject
-    private HttpUtil httpUtil;
+    private ResourceUtil resourceUtil;
 
     @Inject
     private StockExchangeCRUDRepository repository;
@@ -52,7 +50,7 @@ public class StockExchangeResource {
     public JSONArray getStockExchanges() {
         log.debug("REST request to get stock exchanges");
         List<StockExchangeWithSecurities> stockExchanges = repository.findAll();
-        UriBuilder uriBuilder = httpUtil.getUriBuilder(uriInfo);
+        UriBuilder uriBuilder = resourceUtil.getUriBuilder(uriInfo);
         return stockExchanges.stream()
                              .map(stockExchange ->
                                       this.buildStockExchangeJSON(stockExchange,
@@ -71,7 +69,7 @@ public class StockExchangeResource {
         StockExchangeWithSecurities stockExchange =
             stockExchangeService.getStockExchange(upperSymbol)
                                 .orElseThrow(() -> new StockExchangeNotFoundException(upperSymbol));
-        return this.buildStockExchangeJSON(stockExchange, () -> httpUtil.getUriBuilder(uriInfo));
+        return this.buildStockExchangeJSON(stockExchange, () -> resourceUtil.getUriBuilder(uriInfo));
     }
 
     private JSONObject buildStockExchangeJSON(StockExchangeWithSecurities stockExchange,

@@ -2,8 +2,7 @@ package net.madicorp.smartinvestplus.date;
 
 import net.madicorp.smartinvestplus.stockexchange.domain.Symbol;
 import net.madicorp.smartinvestplus.stockexchange.service.StockExchangeService;
-import net.madicorp.smartinvestplus.web.rest.HttpUtil;
-import org.springframework.stereotype.Component;
+import net.madicorp.smartinvestplus.web.rest.ResourceUtil;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;
@@ -22,7 +21,6 @@ import java.util.Optional;
  * Date: 12/07/2016
  * Time: 20:24
  */
-@Component
 @Path("/api/stock-exchanges/{stock-exchange-symbol}/holidays/")
 public class HolidaysResource {
 
@@ -31,7 +29,7 @@ public class HolidaysResource {
     private UriInfo uriInfo;
 
     @Inject
-    private HttpUtil httpUtil;
+    private ResourceUtil resourceUtil;
 
     @Inject
     private StockExchangeService stockExchService;
@@ -46,7 +44,7 @@ public class HolidaysResource {
         StockExchangeHoliday stockExchangeHoliday =
             stockExchService.addHoliday(upperStockExchangeSymbol, holiday)
                             .orElseThrow(() -> badRequest(upperStockExchangeSymbol, formattedHoliday));
-        URI createdUri = httpUtil.getUriBuilder(uriInfo).path("{holiday}").build(formattedHoliday);
+        URI createdUri = resourceUtil.getUriBuilder(uriInfo).path("{holiday}").build(formattedHoliday);
         return Response.created(createdUri).entity(stockExchangeHoliday).build();
     }
 
