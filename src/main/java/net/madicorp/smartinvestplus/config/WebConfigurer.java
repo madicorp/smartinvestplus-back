@@ -67,14 +67,12 @@ public class WebConfigurer implements ServletContextInitializer, EmbeddedServlet
      */
     private void initMetrics(ServletContext servletContext, EnumSet<DispatcherType> disps) {
         log.debug("Initializing Metrics registries");
-        servletContext.setAttribute(InstrumentedFilter.REGISTRY_ATTRIBUTE,
-            metricRegistry);
-        servletContext.setAttribute(MetricsServlet.METRICS_REGISTRY,
-            metricRegistry);
+        servletContext.setAttribute(InstrumentedFilter.REGISTRY_ATTRIBUTE, metricRegistry);
+        servletContext.setAttribute(MetricsServlet.METRICS_REGISTRY, metricRegistry);
 
         log.debug("Registering Metrics Filter");
-        FilterRegistration.Dynamic metricsFilter = servletContext.addFilter("webappMetricsFilter",
-            new InstrumentedFilter());
+        FilterRegistration.Dynamic metricsFilter =
+            servletContext.addFilter("webappMetricsFilter", new InstrumentedFilter());
 
         metricsFilter.addMappingForUrlPatterns(disps, true, "/*");
         metricsFilter.setAsyncSupported(true);

@@ -76,7 +76,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
             .addFilterBefore(jwtFilter(), UsernamePasswordAuthenticationFilter.class)
             .authorizeRequests()
             .antMatchers(nonAuthenticatedUrls()).permitAll()
-            //.antMatchers("/api/**").authenticated()
+            .antMatchers("/api/**").authenticated()
             .antMatchers("/management/**").hasAuthority(AuthoritiesConstants.ADMIN)
             .antMatchers("/swagger-ui/index.html").hasAuthority(AuthoritiesConstants.ADMIN);
     }
@@ -93,7 +93,6 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     private String[] nonAuthenticatedUrls() {
         return new String[]{
-            "/api/**",
             "/api/register",
             "/api/activate",
             "/api/authenticate",

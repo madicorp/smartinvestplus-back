@@ -45,8 +45,8 @@ public class AuditResource {
         Pageable pageable = resourceUtil.page(page, size);
         Page<AuditEvent> auditEventPage;
         if (from != null && to != null) {
-            LocalDate fromDate = LocalDate.parse(from, DateTimeFormatter.BASIC_ISO_DATE);
-            LocalDate toDate = LocalDate.parse(to, DateTimeFormatter.BASIC_ISO_DATE);
+            LocalDate fromDate = LocalDate.parse(from, DateTimeFormatter.ISO_DATE);
+            LocalDate toDate = LocalDate.parse(to, DateTimeFormatter.ISO_DATE);
             auditEventPage = auditEventService.findByDates(fromDate.atTime(0, 0), toDate.atTime(23, 59), pageable);
         } else {
             auditEventPage = auditEventService.findAll(pageable);

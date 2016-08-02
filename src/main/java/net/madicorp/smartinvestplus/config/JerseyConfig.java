@@ -5,6 +5,8 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
+
 /**
  * User: sennen
  * Date: 03/07/2016
@@ -13,7 +15,10 @@ import org.springframework.stereotype.Component;
 @Component
 public class JerseyConfig extends ResourceConfig {
 
-    public JerseyConfig() {
+    private static final String NET_MADICORP_SMARTINVESTPLUS = "net.madicorp.smartinvestplus";
+
+    @PostConstruct
+    public void init() {
         property(ServerProperties.RESPONSE_SET_STATUS_OVER_SEND_ERROR, "true");
         registerEndpoints();
         registerLogging();
@@ -21,7 +26,7 @@ public class JerseyConfig extends ResourceConfig {
     }
 
     private void registerEndpoints() {
-        packages("net.madicorp.smartinvestplus");
+        packages(NET_MADICORP_SMARTINVESTPLUS);
     }
 
     private void registerLogging() {
