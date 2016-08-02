@@ -17,8 +17,7 @@ public class JerseyConfig extends ResourceConfig {
 
     private static final String NET_MADICORP_SMARTINVESTPLUS = "net.madicorp.smartinvestplus";
 
-    @PostConstruct
-    public void init() {
+    public JerseyConfig() {
         property(ServerProperties.RESPONSE_SET_STATUS_OVER_SEND_ERROR, "true");
         registerEndpoints();
         registerLogging();

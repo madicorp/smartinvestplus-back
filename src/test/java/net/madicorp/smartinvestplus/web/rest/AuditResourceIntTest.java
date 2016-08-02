@@ -82,8 +82,8 @@ public class AuditResourceIntTest {
         // GIVEN
         when(mockAuditEventRepo.findAllByAuditEventDateBetween(any(), any(), any()))
             .thenReturn(new PageImpl<>(singletonAuditEvent()));
-        String fromDate = "20160701";
-        String toDate = "20160702";
+        String fromDate = "2016-07-01";
+        String toDate = "2016-07-02";
 
         // WHEN
         Response actual = rule.get("/management/jhipster/audits", param("fromDate", fromDate), param("toDate", toDate));
