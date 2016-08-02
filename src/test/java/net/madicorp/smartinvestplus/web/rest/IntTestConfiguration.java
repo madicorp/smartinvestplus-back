@@ -53,8 +53,8 @@ public class IntTestConfiguration {
     }
 
     @Bean
-    public HttpUtil httpUtil() {
-        return new HttpUtil();
+    public ResourceUtil httpUtil() {
+        return new ResourceUtil();
     }
 
     @Bean

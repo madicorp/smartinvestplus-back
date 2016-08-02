@@ -1,7 +1,6 @@
 package net.madicorp.smartinvestplus.web.rest;
 
 import com.codahale.metrics.annotation.Timed;
-import net.madicorp.smartinvestplus.config.Constants;
 import net.madicorp.smartinvestplus.domain.Authority;
 import net.madicorp.smartinvestplus.domain.User;
 import net.madicorp.smartinvestplus.repository.AuthorityRepository;
@@ -16,11 +15,10 @@ import net.madicorp.smartinvestplus.web.rest.util.PaginationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
-import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;
@@ -59,7 +57,6 @@ import java.util.stream.Collectors;
  * </ul>
  * <p>Another option would be to have a specific JPA entity graph to handle this case.</p>
  */
-@Component
 @Path("/api/users/")
 public class UserResource {
 
@@ -69,7 +66,7 @@ public class UserResource {
     private UriInfo uriInfo;
 
     @Inject
-    private HttpUtil httpUtil;
+    private ResourceUtil resourceUtil;
 
     @Inject
     private UserRepository userRepository;
@@ -107,18 +104,18 @@ public class UserResource {
         if (userRepository.findOneByLogin(managedUserDTO.getLogin().toLowerCase()).isPresent()) {
             HttpHeaders headers =
                 HeaderUtil.createFailureAlert("userManagement", "userexists", "Login already in use");
-            return httpUtil.addHeaders(httpUtil.badRequestBuilder(), headers).build();
+            return resourceUtil.addHeaders(resourceUtil.badRequestBuilder(), headers).build();
         } else if (userRepository.findOneByEmail(managedUserDTO.getEmail()).isPresent()) {
             HttpHeaders headers =
                 HeaderUtil.createFailureAlert("userManagement", "emailexists", "Email already in use");
-            return httpUtil.addHeaders(httpUtil.badRequestBuilder(), headers).build();
+            return resourceUtil.addHeaders(resourceUtil.badRequestBuilder(), headers).build();
         } else {
             User newUser = userService.createUser(managedUserDTO);
-            mailService.sendCreationEmail(newUser, httpUtil.getBaseUrl(uriInfo));
+            mailService.sendCreationEmail(newUser, resourceUtil.getBaseUrl(uriInfo));
             HttpHeaders headers = HeaderUtil.createAlert("userManagement.created", newUser.getLogin());
-            return httpUtil.addHeaders(Response.created(new URI("/api/users/" + newUser.getLogin())), headers)
-                           .entity(newUser)
-                           .build();
+            return resourceUtil.addHeaders(Response.created(new URI("/api/users/" + newUser.getLogin())), headers)
+                               .entity(newUser)
+                               .build();
         }
     }
 
@@ -141,27 +138,27 @@ public class UserResource {
         if (existingUser.isPresent() && (!existingUser.get().getId().equals(managedUserDTO.getId()))) {
             HttpHeaders headers =
                 HeaderUtil.createFailureAlert("userManagement", "emailexists", "E-mail already in use");
-            return httpUtil.addHeaders(httpUtil.badRequestBuilder(), headers).build();
+            return resourceUtil.addHeaders(resourceUtil.badRequestBuilder(), headers).build();
 
         }
         existingUser = userRepository.findOneByLogin(managedUserDTO.getLogin().toLowerCase());
         if (existingUser.isPresent() && (!existingUser.get().getId().equals(managedUserDTO.getId()))) {
             HttpHeaders headers =
                 HeaderUtil.createFailureAlert("userManagement", "userexists", "Login already in use");
-            return httpUtil.addHeaders(httpUtil.badRequestBuilder(), headers).build();
+            return resourceUtil.addHeaders(resourceUtil.badRequestBuilder(), headers).build();
         }
         return userRepository.findOneById(managedUserDTO.getId())
                              .map(user -> {
                                  updateUser(managedUserDTO, user);
                                  HttpHeaders headers =
                                      HeaderUtil.createAlert("userManagement.updated", managedUserDTO.getLogin());
-                                 return httpUtil.addHeaders(Response.ok(), headers)
-                                                .entity(
+                                 return resourceUtil.addHeaders(Response.ok(), headers)
+                                                    .entity(
                                                     new ManagedUserDTO(userRepository.findOne(managedUserDTO.getId())))
-                                                .build();
+                                                    .build();
 
                              })
-                             .orElseGet(() -> httpUtil.serverError());
+                             .orElseGet(() -> resourceUtil.serverError());
 
     }
 
@@ -193,14 +190,14 @@ public class UserResource {
     @Timed
     public Response getAllUsers(@QueryParam("page") Integer page, @QueryParam("size") Integer size)
         throws URISyntaxException {
-        Page<User> userPage = userRepository.findAll(new TrivialPage(page, size));
+        Page<User> userPage = userRepository.findAll(resourceUtil.page(page, size));
         List<ManagedUserDTO> managedUserDTOs = userPage.getContent().stream()
                                                        .map(ManagedUserDTO::new)
                                                        .collect(Collectors.toList());
-        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(userPage, httpUtil.getBaseUrl(uriInfo));
-        return httpUtil.addHeaders(Response.ok(), headers)
-                       .entity(managedUserDTOs)
-                       .build();
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(userPage, resourceUtil.getBaseUrl(uriInfo));
+        return resourceUtil.addHeaders(Response.ok(), headers)
+                           .entity(managedUserDTOs)
+                           .build();
 
     }
 
@@ -219,7 +216,7 @@ public class UserResource {
         return userService.getUserWithAuthoritiesByLogin(login)
                           .map(ManagedUserDTO::new)
                           .map(managedUserDTO -> Response.ok().entity(managedUserDTO).build())
-                          .orElse(httpUtil.notFound());
+                          .orElse(resourceUtil.notFound());
     }
 
     /**

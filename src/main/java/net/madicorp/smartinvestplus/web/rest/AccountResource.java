@@ -15,7 +15,6 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
-import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
 import javax.validation.Valid;
@@ -30,7 +29,6 @@ import java.util.Optional;
 /**
  * REST controller for managing the current user's account.
  */
-@Component
 @Path("/api")
 public class AccountResource {
 
@@ -40,7 +38,7 @@ public class AccountResource {
     private UriInfo uriInfo;
 
     @Inject
-    private HttpUtil httpUtil;
+    private ResourceUtil resourceUtil;
 
     @Inject
     private UserRepository userRepository;
@@ -67,13 +65,13 @@ public class AccountResource {
     @Timed
     public Response registerAccount(@Valid ManagedUserDTO managedUserDTO) {
         return userRepository.findOneByLogin(managedUserDTO.getLogin().toLowerCase())
-                             .map(user -> httpUtil.badRequestBuilder().entity("login already in use").build())
+                             .map(user -> resourceUtil.badRequestBuilder().entity("login already in use").build())
                              .orElseGet(() -> tryCreateUser(managedUserDTO));
     }
 
     private Response tryCreateUser(ManagedUserDTO managedUserDTO) {
         return userRepository.findOneByEmail(managedUserDTO.getEmail())
-                             .map(user -> httpUtil.badRequestBuilder().entity("email address already in use").build())
+                             .map(user -> resourceUtil.badRequestBuilder().entity("email address already in use").build())
                              .orElseGet(() -> doCreateUser(managedUserDTO));
     }
 
@@ -85,8 +83,8 @@ public class AccountResource {
                                                       managedUserDTO.getLastName(),
                                                       managedUserDTO.getEmail().toLowerCase(),
                                                       managedUserDTO.getLangKey());
-        mailService.sendActivationEmail(user, httpUtil.getBaseUrl(uriInfo));
-        URI userAccountURI = httpUtil.getUriBuilder(uriInfo).path(login).build();
+        mailService.sendActivationEmail(user, resourceUtil.getBaseUrl(uriInfo));
+        URI userAccountURI = resourceUtil.getUriBuilder(uriInfo).path(login).build();
         return Response.created(userAccountURI).build();
     }
 
@@ -102,8 +100,8 @@ public class AccountResource {
     @Timed
     public Response activateAccount(@QueryParam("key") String key) {
         return userService.activateRegistration(key)
-                          .map(user -> httpUtil.noContent())
-                          .orElse(httpUtil.serverError());
+                          .map(user -> resourceUtil.noContent())
+                          .orElse(resourceUtil.serverError());
     }
 
     /**
@@ -118,7 +116,7 @@ public class AccountResource {
     @Timed
     public Response isAuthenticated() {
         if (!securityUtils.isAuthenticated()) {
-            return httpUtil.noContent();
+            return resourceUtil.noContent();
         }
         return Response.ok(securityUtils.getCurrentUserLogin()).build();
     }
@@ -157,7 +155,7 @@ public class AccountResource {
         }
         return userService.getUserWithAuthorities(login)
                           .map(user -> Response.ok(new UserDTO(user)).build())
-                          .orElse(httpUtil.notFound());
+                          .orElse(resourceUtil.notFound());
     }
 
     /**
@@ -192,9 +190,9 @@ public class AccountResource {
                                  userService.updateUserInformation(user.getFirstName(), userDTO.getLastName(),
                                                                    userDTO.getEmail(),
                                                                    userDTO.getLangKey());
-                                 return httpUtil.noContent();
+                                 return resourceUtil.noContent();
                              })
-                             .orElseGet(httpUtil::serverError);
+                             .orElseGet(resourceUtil::serverError);
     }
 
     /**
@@ -210,10 +208,10 @@ public class AccountResource {
     @Timed
     public Response changePassword(String password) {
         if (!checkPasswordLength(password)) {
-            return httpUtil.badRequestBuilder().entity("Incorrect password").build();
+            return resourceUtil.badRequestBuilder().entity("Incorrect password").build();
         }
         userService.changePassword(password);
-        return httpUtil.noContent();
+        return resourceUtil.noContent();
     }
 
     /**
@@ -230,9 +228,9 @@ public class AccountResource {
     public Response requestPasswordReset(String mail) {
         return userService.requestPasswordReset(mail)
                           .map(user -> {
-                              mailService.sendPasswordResetMail(user, httpUtil.getBaseUrl(uriInfo));
+                              mailService.sendPasswordResetMail(user, resourceUtil.getBaseUrl(uriInfo));
                               return Response.ok("e-mail was sent").build();
-                          }).orElse(httpUtil.badRequestBuilder().entity("e-mail address not registered").build());
+                          }).orElse(resourceUtil.badRequestBuilder().entity("e-mail address not registered").build());
     }
 
     /**
@@ -249,17 +247,17 @@ public class AccountResource {
     @Timed
     public Response finishPasswordReset(KeyAndPasswordDTO keyAndPassword) {
         if (!checkPasswordLength(keyAndPassword.getNewPassword())) {
-            return httpUtil.badRequestBuilder().entity("Incorrect password").build();
+            return resourceUtil.badRequestBuilder().entity("Incorrect password").build();
         }
         return userService.completePasswordReset(keyAndPassword.getNewPassword(), keyAndPassword.getKey())
-                          .map(user -> httpUtil.noContent())
-                          .orElse(httpUtil.serverError());
+                          .map(user -> resourceUtil.noContent())
+                          .orElse(resourceUtil.serverError());
     }
 
     private Response cantCreateAccountBecauseEmailExists() {
         HttpHeaders httpHeaders =
             HeaderUtil.createFailureAlert("user-management", "emailexists", "Email already in use");
-        return httpUtil.addHeaders(httpUtil.badRequestBuilder(), httpHeaders).build();
+        return resourceUtil.addHeaders(resourceUtil.badRequestBuilder(), httpHeaders).build();
     }
 
     private boolean checkPasswordLength(String password) {

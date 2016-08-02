@@ -7,13 +7,12 @@ import net.madicorp.smartinvestplus.stockexchange.service.CloseRateService;
 import net.madicorp.smartinvestplus.stockexchange.service.DivisionAlreadyExistsException;
 import net.madicorp.smartinvestplus.stockexchange.service.IncompleteDataHistoryException;
 import net.madicorp.smartinvestplus.stockexchange.service.StockExchangeService;
-import net.madicorp.smartinvestplus.web.rest.HttpUtil;
+import net.madicorp.smartinvestplus.web.rest.ResourceUtil;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;
@@ -23,7 +22,6 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Iterator;
 
-@Component
 @Path("/api/stock-exchanges/{stock-exchange-symbol}/securities/")
 public class SecuritiesResource {
     private static final DateTimeFormatter URI_DATE_FORMATTER = DateTimeFormatter.BASIC_ISO_DATE;
@@ -33,7 +31,7 @@ public class SecuritiesResource {
     private UriInfo uriInfo;
 
     @Inject
-    private HttpUtil httpUtil;
+    private ResourceUtil resourceUtil;
 
     @Inject
     private StockExchangeService stockExchService;
@@ -55,7 +53,7 @@ public class SecuritiesResource {
         StockExchangeWithSecurities stockExchange =
             stockExchService.getStockExchange(upperStockExchangeSymbol)
                             .orElseThrow(() -> new StockExchangeNotFoundException(upperStockExchangeSymbol));
-        UriBuilder uriBuilder = httpUtil.getUriBuilder(uriInfo).path("{securitySymbol}");
+        UriBuilder uriBuilder = resourceUtil.getUriBuilder(uriInfo).path("{securitySymbol}");
         return stockExchange.getSecurities()
                             .stream()
                             .map(security -> this.buildSecurityJSON(security, uriBuilder))
@@ -133,9 +131,9 @@ public class SecuritiesResource {
             division.getRate());
         SecurityWithStockExchange security = getSecurityWithStockExchange(stockExchangeSymbol, securitySymbol);
         try {
-            URI divisionUri = httpUtil.getUriBuilder(uriInfo)
-                                      .path("{division-date}")
-                                      .build(divisionDate.format(URI_DATE_FORMATTER));
+            URI divisionUri = resourceUtil.getUriBuilder(uriInfo)
+                                          .path("{division-date}")
+                                          .build(divisionDate.format(URI_DATE_FORMATTER));
             return Response.created(divisionUri)
                            .entity(stockExchService.addDivision(security, division))
                            .build();

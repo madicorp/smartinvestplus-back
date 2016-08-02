@@ -5,8 +5,6 @@ import net.madicorp.smartinvestplus.config.JHipsterProperties;
 import net.madicorp.smartinvestplus.domain.User;
 import net.madicorp.smartinvestplus.security.jwt.TokenProvider;
 import net.madicorp.smartinvestplus.service.UserService;
-import net.madicorp.smartinvestplus.stockexchange.domain.Symbol;
-import net.madicorp.smartinvestplus.stockexchange.domain.Username;
 import net.madicorp.smartinvestplus.web.rest.dto.LoginDTO;
 import net.madicorp.smartinvestplus.web.rest.dto.UserDTO;
 import org.springframework.http.MediaType;
@@ -16,7 +14,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -28,7 +25,6 @@ import java.util.Collections;
 import static javax.ws.rs.core.Cookie.DEFAULT_VERSION;
 import static net.madicorp.smartinvestplus.security.jwt.TokenProvider.JWT_COOKIE_NAME;
 
-@Component
 @Path("/api")
 public class UserJWTResource {
 
@@ -39,7 +35,7 @@ public class UserJWTResource {
     private AuthenticationManager authenticationManager;
 
     @Inject
-    private HttpUtil httpUtil;
+    private ResourceUtil resourceUtil;
 
     @Inject
     private UserService userService;
@@ -60,8 +56,7 @@ public class UserJWTResource {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     @Produces(MediaType.APPLICATION_JSON_VALUE)
     @Timed
-    public Response authorize(@FormParam("j_username") @Username String username,
-                              @FormParam("j_password") String password) {
+    public Response authorize(@FormParam("j_username") String username, @FormParam("j_password") String password) {
         LoginDTO loginDTO = login(username, password);
 
         UsernamePasswordAuthenticationToken authenticationToken =
@@ -88,13 +83,13 @@ public class UserJWTResource {
     }
 
     private NewCookie cookie(String value, int maxAge) {
-        return new NewCookie(JWT_COOKIE_NAME, value, null, null, DEFAULT_VERSION, null, maxAge, false);
+        return new NewCookie(JWT_COOKIE_NAME, value, "/", null, DEFAULT_VERSION, null, maxAge, false);
     }
 
     private Response tryToCreateResponseWithUserInfo(String username, String jwt) {
         return userService.getUserWithAuthorities(username)
                           .map(user -> successfulAuthResponse(user, jwt))
-                          .orElse(httpUtil.notFound());
+                          .orElse(resourceUtil.notFound());
     }
 
     private Response successfulAuthResponse(User user, String jwt) {

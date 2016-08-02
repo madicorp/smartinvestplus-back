@@ -1,6 +1,8 @@
 package net.madicorp.smartinvestplus.web.rest;
 
 import com.google.common.base.Joiner;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
@@ -15,7 +17,7 @@ import javax.ws.rs.core.UriInfo;
  * Time: 20:13
  */
 @Service
-public class HttpUtil {
+public class ResourceUtil {
 
     public Response.ResponseBuilder badRequestBuilder() {
         return Response.status(400).type(MediaType.TEXT_PLAIN_TYPE);
@@ -49,6 +51,12 @@ public class HttpUtil {
 
     public UriBuilder getUriBuilder(UriInfo uriInfo) {
         return uriInfo.getAbsolutePathBuilder();
+    }
+
+    public Pageable page(Integer page, Integer size) {
+        page = page != null ? page : 0;
+        size = size != null ? size : 20;
+        return new PageRequest(page, size);
     }
 
 }
