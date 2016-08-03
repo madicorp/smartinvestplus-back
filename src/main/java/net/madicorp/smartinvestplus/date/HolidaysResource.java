@@ -3,6 +3,7 @@ package net.madicorp.smartinvestplus.date;
 import net.madicorp.smartinvestplus.stockexchange.domain.Symbol;
 import net.madicorp.smartinvestplus.stockexchange.service.StockExchangeService;
 import net.madicorp.smartinvestplus.web.rest.ResourceUtil;
+import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;

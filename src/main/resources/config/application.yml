@@ -11,8 +11,10 @@
 # http://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html
 # ===================================================================
 
+# http://docs.spring.io/spring-boot/docs/current/reference/html/howto-actuator.html#howto-use-actuator-with-jersey
+server:
+    servlet-path: /management
 management:
-    context-path: /management
     health:
         mail:
             enabled: false # When using the MailService, configure an SMTP server and set this to true
