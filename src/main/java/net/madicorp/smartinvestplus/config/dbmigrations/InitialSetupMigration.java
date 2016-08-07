@@ -104,7 +104,7 @@ public class InitialSetupMigration {
         String stockExchange = stockExchangeAndSecurity[0].toUpperCase(),
             security = stockExchangeAndSecurity[1].toUpperCase();
         MongoCollection closingRatesCollection = collection(db, "close_rates");
-        closingRatesCollection.ensureIndex(mongoIndex("stock_exchanges", "security", "date"));
+        closingRatesCollection.ensureIndex(mongoIndex("stock_exchange", "security", "date"));
         try (BufferedReader reader = new BufferedReader(new FileReader(closeRatesFile.getFile()))) {
             CloseRate[] closeRates = reader.lines()
                                            // Skip header
